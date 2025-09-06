@@ -8,15 +8,15 @@ echo "🚀 Starting MindJourney..."
 if [ ! -f .env ]; then
     echo "⚠️  .env file not found. Creating from template..."
     cp env.example .env
-    echo "📝 Please edit .env file and add your OpenAI API key"
+    echo "📝 Please edit .env file and add your GEMINI API key"
     echo "   Then run this script again."
     exit 1
 fi
 
-# Check if OpenAI API key is set
-if ! grep -q "OPENAI_API_KEY=sk-" .env; then
-    echo "⚠️  OpenAI API key not found in .env file"
-    echo "   Please add your OpenAI API key to the .env file"
+# Check if Gemini API key is set
+if ! grep -q "GEMINI_API_KEY=" .env; then
+    echo "⚠️  Gemini API key not found in .env file"
+    echo "   Please add your Gemini API key to the .env file"
     exit 1
 fi
 

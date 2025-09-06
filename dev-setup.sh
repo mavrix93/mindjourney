@@ -18,7 +18,7 @@ pip install -r requirements.txt
 echo "⚙️  Setting up environment variables..."
 if [ ! -f .env ]; then
     cp ../env.example .env
-    echo "📝 Created .env file. Please add your OpenAI API key."
+    echo "📝 Created .env file. Please add your Gemini API key."
 fi
 
 # Install Node.js dependencies for frontend
@@ -34,6 +34,6 @@ echo "2. Frontend: cd frontend && npm start"
 echo "3. Celery: cd backend && source venv/bin/activate && celery -A mindjourney worker --loglevel=info"
 echo ""
 echo "Don't forget to:"
-echo "- Add your OpenAI API key to backend/.env"
+echo "- Add your Gemini API key to backend/.env"
 echo "- Set up PostgreSQL database"
 echo "- Run migrations: python manage.py migrate"
