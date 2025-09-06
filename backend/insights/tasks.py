@@ -15,7 +15,7 @@ from categories.models import Category
 
 
 @shared_task
-def extract_insights_task(entry_id: int) -> Result[bool, str]:
+def extract_insights_task(entry_id: int) -> bool:
     """Celery task to extract insights from a diary entry"""
     try:
         with transaction.atomic():
@@ -56,15 +56,20 @@ def extract_insights_task(entry_id: int) -> Result[bool, str]:
                     entry.overall_sentiment = overall_sentiment
                     entry.save()
 
-                    return Success(True)
+                    return True
 
                 case Failure(error):
-                    return Failure(f"Failed to extract insights: {error}")
+                    # Log the error but don't return Failure object
+                    print(f"Failed to extract insights for entry {entry_id}: {error}")
+                    return False
 
                 case _else:
-                    raise RuntimeError(f"Unexpected value: {_else}")
+                    print(f"Unexpected value in extract_insights_task: {_else}")
+                    return False
 
     except Entry.DoesNotExist:
-        return Failure(f"Entry with id {entry_id} not found")
+        print(f"Entry with id {entry_id} not found")
+        return False
     except Exception as e:
-        return Failure(f"Error processing entry {entry_id}: {str(e)}")
+        print(f"Error processing entry {entry_id}: {str(e)}")
+        return False

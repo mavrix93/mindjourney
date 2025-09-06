@@ -9,11 +9,15 @@ from categories.models import Category
 
 class InsightViewSet(viewsets.ModelViewSet):
     serializer_class = InsightSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        """Return insights for entries owned by the authenticated user"""
-        return Insight.objects.filter(entry__user=self.request.user)
+        """Return insights for entries owned by the authenticated user, or all insights if no user"""
+        if self.request.user.is_authenticated:
+            return Insight.objects.filter(entry__user=self.request.user)
+        else:
+            # For demo purposes, return all insights when not authenticated
+            return Insight.objects.all()
 
     @action(detail=False, methods=["get"])
     def by_category(self, request):
