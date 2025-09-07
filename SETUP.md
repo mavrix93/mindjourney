@@ -48,7 +48,7 @@ celery -A mindjourney worker --loglevel=info
 
 - ✅ Django backend with REST API
 - ✅ React frontend with dark star theme
-- ✅ AI insights extraction (requires OpenAI API key)
+- ✅ AI insights extraction (requires Gemini API key)
 - ✅ Document upload functionality
 - ✅ Timeline and map views
 - ✅ Docker containerization
@@ -58,7 +58,7 @@ celery -A mindjourney worker --loglevel=info
 
 ## Next Steps
 
-1. **Set up OpenAI API key** in `.env` file
+1. **Set up Gemini API key** in `.env` file
 2. **Choose your preferred setup method** (Docker recommended)
 3. **Start the application** using the scripts provided
 4. **Create your first diary entry** and watch AI extract insights!
@@ -70,6 +70,6 @@ If you encounter any issues:
 1. Run `./test-setup.sh` to diagnose problems
 2. Check the troubleshooting section in README.md
 3. Ensure all prerequisites are installed
-4. Verify your OpenAI API key is valid
+4. Verify your Gemini API key is valid
 
 The application is now ready to run! 🚀

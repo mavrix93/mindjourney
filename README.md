@@ -38,7 +38,7 @@ A beautiful, modern diary application that uses AI to extract insights from your
 - **PostgreSQL** - Database
 - **Redis** - Caching and message broker
 - **Celery** - Background task processing
-- **OpenAI GPT-4** - AI insights extraction
+- **Google Gemini** - AI insights extraction
 - **Pydantic** - Data validation
 - **Returns** - Functional error handling
 
@@ -57,7 +57,7 @@ A beautiful, modern diary application that uses AI to extract insights from your
 ### Prerequisites
 - Docker and Docker Compose (recommended)
 - OR Python 3.11+ and Node.js 18+ (for local development)
-- OpenAI API key
+- Gemini API key
 
 ### Setup
 
@@ -70,7 +70,7 @@ A beautiful, modern diary application that uses AI to extract insights from your
 2. **Set up environment variables**
    ```bash
    cp env.example .env
-   # Edit .env and add your OpenAI API key
+   # Edit .env and add your Gemini API key
    ```
 
 3. **Start the application (Docker - Recommended)**
@@ -113,7 +113,7 @@ pip install -r requirements.txt
 
 # Set up environment variables
 export SECRET_KEY="your-secret-key"
-export OPENAI_API_KEY="your-openai-api-key"
+export GEMINI_API_KEY="your-gemini-api-key"
 export DB_HOST="localhost"
 export DB_NAME="mindjourney"
 export DB_USER="postgres"
@@ -169,7 +169,7 @@ npm start
 
 ## AI Insights Extraction
 
-The application uses OpenAI's GPT-4 to automatically extract insights from diary entries. The AI identifies:
+The application uses Google's Gemini to automatically extract insights from diary entries. The AI identifies:
 
 - **Places** - Cities, countries, landmarks, venues
 - **Products** - Items, brands, purchases
@@ -220,7 +220,7 @@ mindjourney/
    - For Docker: Make sure PostgreSQL container is running
    - For local development: Install PostgreSQL and create database
 
-3. **OpenAI API Errors**
+3. **Gemini API Errors**
    - Ensure your API key is set in `.env` file
    - Check that you have sufficient API credits
 
@@ -238,6 +238,16 @@ mindjourney/
 ./test-setup.sh
 ```
 
+### Test the AI Client (CLI)
+```bash
+# Inline text
+GEMINI_API_KEY=your-key python test_ai.py --text "Walked around London and tried gelato."
+
+# From file
+export GEMINI_API_KEY=your-key
+python test_ai.py --file sample.txt --pretty
+```
+
 ## Contributing
 
 1. Fork the repository
@@ -252,6 +262,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- OpenAI for providing the GPT-4 API
+- Google for providing the Gemini API
 - The React and Django communities for excellent documentation
 - All the open-source libraries that made this project possible

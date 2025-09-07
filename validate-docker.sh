@@ -22,21 +22,21 @@ echo "✅ Docker and Docker Compose are installed"
 if [ ! -f .env ]; then
     echo "⚠️  .env file not found. Creating from template..."
     cp env.example .env
-    echo "📝 Please edit .env file and add your OpenAI API key"
+    echo "📝 Please edit .env file and add your Gemini API key"
     echo "   Then run this script again."
     exit 1
 fi
 
 echo "✅ .env file exists"
 
-# Check if OpenAI API key is set
-if ! grep -q "OPENAI_API_KEY=sk-" .env; then
-    echo "⚠️  OpenAI API key not found in .env file"
-    echo "   Please add your OpenAI API key to the .env file"
+# Check if Gemini API key is set
+if ! grep -q "GEMINI_API_KEY=" .env; then
+    echo "⚠️  Gemini API key not found in .env file"
+    echo "   Please add your Gemini API key to the .env file"
     exit 1
 fi
 
-echo "✅ OpenAI API key is configured"
+echo "✅ Gemini API key is configured"
 
 # Test Docker Compose configuration
 if docker-compose config > /dev/null 2>&1; then

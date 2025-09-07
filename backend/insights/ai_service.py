@@ -1,7 +1,8 @@
-import openai
+import google.generativeai as genai
 import re
 import json
 from typing import List, Dict, Any
+from google.api_core.exceptions import GoogleAPIError
 from django.conf import settings
 from returns.result import Result, Success, Failure
 from pydantic import BaseModel, Field
@@ -35,34 +36,30 @@ class AIInsightExtractor:
     """AI service for extracting insights from diary entries"""
 
     def __init__(self):
-        self.client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        # Configure Gemini client
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        # Use a strong default model; can be overridden later if needed
+        self.model = genai.GenerativeModel("gemini-1.5-pro")
 
     def extract_insights(self, content: str) -> Result[List[InsightData], str]:
         """Extract insights from diary entry content"""
         try:
-            if not settings.OPENAI_API_KEY:
-                return Failure("OpenAI API key not configured")
+            if not settings.GEMINI_API_KEY:
+                return Failure("Gemini API key not configured")
 
             prompt = self._build_prompt(content)
-            response = self.client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an AI assistant that extracts insights from diary entries. You identify places, products, movies, meals, people, activities, and emotions mentioned in the text, along with their sentiment.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.3,
-                max_tokens=2000,
-            )
+            # Generate content with Gemini
+            response = self.model.generate_content(prompt)
 
-            insights_text = response.choices[0].message.content
+            # google-generativeai returns text on .text
+            insights_text = getattr(response, "text", None)
+            if not insights_text:
+                return Failure("Empty response from Gemini API")
             insights_data = self._parse_insights(insights_text, content)
 
             return Success(insights_data)
 
-        except Exception as e:
+        except (GoogleAPIError, Exception) as e:
             return Failure(f"Error extracting insights: {str(e)}")
 
     def _build_prompt(self, content: str) -> str:
