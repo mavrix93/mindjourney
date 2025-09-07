@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "entries",
     "insights",
     "categories",
@@ -113,3 +114,7 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+# Celery - run tasks locally and synchronously during tests
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True

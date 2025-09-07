@@ -25,6 +25,8 @@
         "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
+        "test:unit": "react-scripts test --watchAll=false src/services",
+        
         "eject": "react-scripts eject"
     },
     "eslintConfig": {
@@ -46,7 +48,8 @@
         ]
     },
     "devDependencies": {
-        "@types/leaflet": "^1.9.8"
+        "@types/leaflet": "^1.9.8",
+        "axios-mock-adapter": "^1.21.2"
     },
     "proxy": "http://localhost:8000"
 }
