@@ -25,6 +25,10 @@ class EntrySerializer(serializers.ModelSerializer):
             "content",
             "is_public",
             "overall_sentiment",
+            "insights_processed",
+            "latitude",
+            "longitude",
+            "location_name",
             "created_at",
             "updated_at",
             "documents",
@@ -36,13 +40,18 @@ class EntrySerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "overall_sentiment",
+            "insights_processed",
+            "latitude",
+            "longitude",
+            "location_name",
         ]
 
 
 class EntryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Entry
-        fields = ["title", "content", "is_public"]
+        fields = ["id", "title", "content", "is_public"]
+        read_only_fields = ["id"]
 
 
 class PublicEntrySerializer(serializers.ModelSerializer):

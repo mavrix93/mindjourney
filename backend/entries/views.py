@@ -47,6 +47,24 @@ class EntryViewSet(viewsets.ModelViewSet):
         else:
             user = self.request.user
 
+        # Generate title if not provided
+        data = serializer.validated_data
+        if not data.get("title"):
+            try:
+                from insights.ai_service import AIInsightExtractor
+
+                extractor = AIInsightExtractor()
+                title_result = extractor.generate_title(data["content"])
+                if title_result.is_successful():
+                    data["title"] = title_result.value
+            except Exception as e:
+                print(f"Failed to generate title: {e}")
+                # Use first few words as fallback
+                words = data["content"].split()[:5]
+                data["title"] = " ".join(words) + (
+                    "..." if len(data["content"].split()) > 5 else ""
+                )
+
         entry = serializer.save(user=user)
         # Trigger async insight extraction
         extract_insights_task.delay(entry.id)

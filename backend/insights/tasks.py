@@ -10,6 +10,7 @@ from django.db import transaction
 from returns.result import Result, Success, Failure
 from .models import Insight
 from .ai_service import AIInsightExtractor, InsightData
+from .geocoding_service import AIGeocodingService
 from entries.models import Entry
 from categories.models import Category
 
@@ -49,13 +50,38 @@ def extract_insights_task(entry_id: int) -> bool:
                         )
                         created_insights.append(insight)
 
-                    # Update overall sentiment
+                    # Update overall sentiment and mark as processed
                     overall_sentiment = extractor.calculate_overall_sentiment(
                         insights_data
                     )
                     entry.overall_sentiment = overall_sentiment
-                    entry.save()
+                    entry.insights_processed = True
 
+                    # Try to geocode places mentioned in the entry
+                    geocoding_service = AIGeocodingService()
+                    geocoding_result = geocoding_service.extract_and_geocode_places(
+                        entry.content
+                    )
+
+                    if geocoding_result.is_successful():
+                        geocoded_places = geocoding_result.value
+                        if geocoded_places:
+                            # Use the first (most confident) place as the main location
+                            main_place = geocoded_places[0]
+                            entry.latitude = main_place["latitude"]
+                            entry.longitude = main_place["longitude"]
+                            entry.location_name = main_place["full_name"]
+                            print(
+                                f"Geocoded entry {entry_id} to {main_place['full_name']} at {main_place['latitude']}, {main_place['longitude']}"
+                            )
+                        else:
+                            print(f"No places found to geocode for entry {entry_id}")
+                    else:
+                        print(
+                            f"Geocoding failed for entry {entry_id}: {geocoding_result.failure()}"
+                        )
+
+                    entry.save()
                     return True
 
                 case Failure(error):

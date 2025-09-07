@@ -1,15 +1,15 @@
 import { motion } from 'framer-motion';
 import {
-    ArrowLeft,
-    Calendar,
-    Download,
-    Edit,
-    Eye,
-    EyeOff,
-    Save,
-    Sparkles,
-    Trash2,
-    X
+  ArrowLeft,
+  Calendar,
+  Download,
+  Edit,
+  Eye,
+  EyeOff,
+  Save,
+  Sparkles,
+  Trash2,
+  X
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -19,9 +19,10 @@ import styled from 'styled-components';
 import { deleteEntry, getEntry, updateEntry } from '../services/api';
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: calc(100vh - 80px); /* Account for bottom navigation */
   padding: 20px;
   padding-top: 60px;
+  padding-bottom: 100px; /* Extra space for bottom navigation */
 `;
 
 const Header = styled.div`
@@ -136,6 +137,15 @@ const InsightCard = styled(motion.div)`
   border-radius: 12px;
   padding: 20px;
   backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(138, 43, 226, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(138, 43, 226, 0.2);
+  }
 `;
 
 const InsightCategory = styled.div`
@@ -364,6 +374,10 @@ const EntryDetail = () => {
     }
   };
 
+  const handleInsightClick = (insight) => {
+    navigate(`/category/${encodeURIComponent(insight.category.name)}/${insight.category.category_type}`);
+  };
+
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading entry</div>;
   if (!entry) return <div>Entry not found</div>;
@@ -521,6 +535,7 @@ const EntryDetail = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
+                onClick={() => handleInsightClick(insight)}
               >
                 <InsightCategory>
                   {insight.category.name} • {insight.category.category_type}

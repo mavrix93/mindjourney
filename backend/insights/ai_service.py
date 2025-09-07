@@ -62,17 +62,50 @@ class AIInsightExtractor:
         except (GoogleAPIError, Exception) as e:
             return Failure(f"Error extracting insights: {str(e)}")
 
+    def generate_title(self, content: str) -> Result[str, str]:
+        """Generate a title for diary entry content"""
+        try:
+            if not settings.GEMINI_API_KEY:
+                return Failure("Gemini API key not configured")
+
+            prompt = f"""
+Generate a short, descriptive title (maximum 5 words) for this diary entry. The title should capture the main subject or event mentioned.
+
+Diary entry:
+"{content}"
+
+Return only the title, nothing else.
+"""
+
+            response = self.model.generate_content(prompt)
+            title = getattr(response, "text", "").strip()
+
+            if not title:
+                return Failure("Empty response from Gemini API")
+
+            return Success(title)
+
+        except (GoogleAPIError, Exception) as e:
+            return Failure(f"Error generating title: {str(e)}")
+
     def _build_prompt(self, content: str) -> str:
         """Build the prompt for AI insight extraction"""
         return f"""
-Analyze the following diary entry and extract insights. For each insight, identify:
+Analyze the following diary entry and extract insights about SUBJECTS/ENTITIES that the person is talking about. Focus on WHAT they're discussing, not HOW they feel about it.
 
-1. The specific text snippet that contains the insight
-2. The category name (e.g., "London", "Ice Cream", "The Matrix")
-3. The category type (place, product, movie, meal, person, activity, emotion, other)
+For each insight, identify:
+
+1. The specific text snippet that contains the subject/entity
+2. The subject name (e.g., "Festacek", "Olomouc", "The Matrix", "Pizza")
+3. The subject type (place, event, movie, meal, person, product, activity, other)
 4. The sentiment score (-1.0 to 1.0, where -1.0 is very negative, 0 is neutral, 1.0 is very positive)
 5. The confidence score (0.0 to 1.0, how confident you are in this categorization)
 6. The start and end positions of the text snippet in the original text
+
+Examples:
+- "Festacek in Olomouc was soo boring" → Extract "Festacek" as an event with negative sentiment
+- "I loved the pizza at Mario's" → Extract "pizza at Mario's" as a meal with positive sentiment
+- "The Matrix is my favorite movie" → Extract "The Matrix" as a movie with positive sentiment
 
 Diary entry:
 "{content}"
@@ -81,8 +114,8 @@ Return the results as a JSON array with this exact format:
 [
     {{
         "text_snippet": "exact text from the entry",
-        "category_name": "name of the category",
-        "category_type": "place|product|movie|meal|person|activity|emotion|other",
+        "category_name": "name of the subject/entity",
+        "category_type": "place|event|movie|meal|person|product|activity|other",
         "sentiment_score": -1.0 to 1.0,
         "confidence_score": 0.0 to 1.0,
         "start_position": 0,
@@ -90,7 +123,7 @@ Return the results as a JSON array with this exact format:
     }}
 ]
 
-Only include insights that are meaningful and have a confidence score above 0.5. Focus on concrete entities like places, products, movies, meals, people, and activities rather than abstract concepts.
+Only include insights that are meaningful and have a confidence score above 0.5. Focus on concrete subjects/entities that people can click on to see related entries.
 """
 
     def _parse_insights(

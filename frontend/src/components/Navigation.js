@@ -54,7 +54,7 @@ const NavLabel = styled.span`
 const navigationItems = [
   { path: '/', icon: Home, label: 'Home' },
   { path: '/timeline', icon: Clock, label: 'Timeline' },
-  { path: '/map', icon: MapPin, label: 'Map' },
+  { path: '/places', icon: MapPin, label: 'Places' },
   { path: '/create', icon: Plus, label: 'Create' },
   { path: '/profile', icon: User, label: 'Profile' },
 ];
