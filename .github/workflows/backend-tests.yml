@@ -1,4 +1,4 @@
-name: Backend Tests
+name: Backend Unit Tests
 
 on:
   push:
@@ -17,20 +17,7 @@ jobs:
     defaults:
       run:
         working-directory: backend
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: mindjourney
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    services: {}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -41,20 +28,8 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Restore Pact contracts artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: pact-contracts
-          path: ../contracts/pacts
-        continue-on-error: true
       - name: Run tests (pytest)
         env:
           DJANGO_SETTINGS_MODULE: mindjourney.settings_minimal
-          # Settings for default settings.py in case tests load it
-          DB_NAME: mindjourney
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_HOST: localhost
-          DB_PORT: 5432
         run: |
           pytest -q

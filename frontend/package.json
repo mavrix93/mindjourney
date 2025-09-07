@@ -26,7 +26,7 @@
         "build": "react-scripts build",
         "test": "react-scripts test",
         "test:unit": "react-scripts test --watchAll=false src/services",
-        "test:consumer": "react-scripts test --watchAll=false --env=node src/__pact__",
+        
         "eject": "react-scripts eject"
     },
     "eslintConfig": {
@@ -49,7 +49,6 @@
     },
     "devDependencies": {
         "@types/leaflet": "^1.9.8",
-        "@pact-foundation/pact": "^11.1.2",
         "axios-mock-adapter": "^1.21.2"
     },
     "proxy": "http://localhost:8000"

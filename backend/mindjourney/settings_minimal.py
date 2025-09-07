@@ -113,3 +113,7 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+# Celery - run tasks locally and synchronously during tests
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True

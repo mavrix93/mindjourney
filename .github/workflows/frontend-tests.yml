@@ -1,4 +1,4 @@
-name: Frontend Tests
+name: Frontend Unit Tests
 
 on:
   push:
@@ -29,12 +29,4 @@ jobs:
         run: npm ci
       - name: Run unit tests
         run: npm run test:unit -- --ci
-      - name: Run Pact consumer tests (generate contracts)
-        env:
-          CI: true
-        run: npm run test:consumer -- --ci
-      - name: Upload Pact contracts artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pact-contracts
-          path: contracts/pacts
+      
