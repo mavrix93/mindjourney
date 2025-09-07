@@ -1,0 +1,20 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "A beautiful, modern diary application that uses AI to extract insights from your entries, categorize experiences, and analyze sentiment. Built with Django and React, featuring a stunning dark star theme with particle effects.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mavrix93/mindjourney.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mavrix93/mindjourney/issues"
+  },
+  "homepage": "https://github.com/mavrix93/mindjourney#readme"
+}
