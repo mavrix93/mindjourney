@@ -9,9 +9,10 @@ import styled from 'styled-components';
 import { createEntry, uploadDocument } from '../services/api';
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: calc(100vh - 80px); /* Account for bottom navigation */
   padding: 20px;
   padding-top: 60px;
+  padding-bottom: 100px; /* Extra space for bottom navigation */
 `;
 
 const Header = styled.div`

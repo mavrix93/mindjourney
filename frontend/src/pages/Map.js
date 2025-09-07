@@ -16,9 +16,10 @@ L.Icon.Default.mergeOptions({
 });
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: calc(100vh - 80px); /* Account for bottom navigation */
   padding: 20px;
   padding-top: 60px;
+  padding-bottom: 100px; /* Extra space for bottom navigation */
 `;
 
 const Header = styled.div`
@@ -135,6 +136,27 @@ const StatValue = styled.span`
   font-weight: 600;
 `;
 
+const NoPlacesMessage = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  
+  h3 {
+    color: #ffffff;
+    margin: 20px 0 10px 0;
+    font-size: 1.5rem;
+  }
+  
+  p {
+    max-width: 400px;
+    line-height: 1.6;
+  }
+`;
+
 // Custom marker component with sentiment-based colors
 const SentimentMarker = ({ insight, position }) => {
   const getMarkerColor = (sentiment) => {
@@ -209,17 +231,22 @@ const Map = () => {
     { retry: false }
   );
 
-  // Filter insights by category
-  const filteredInsights = insights?.filter(insight => 
-    selectedCategory === 'all' || insight.category.category_type === selectedCategory
+  // Filter insights to only show places
+  const placeInsights = insights?.filter(insight => 
+    insight.category.category_type === 'place'
   ) || [];
 
-  // Group insights by location (for now, we'll use mock coordinates)
+  // Filter insights by category (only for places)
+  const filteredInsights = placeInsights.filter(insight => 
+    selectedCategory === 'all' || insight.category.category_type === selectedCategory
+  );
+
+  // For now, we'll show a message that geo-location needs to be set manually
   // In a real app, you'd geocode the place names or store coordinates
   const locationInsights = filteredInsights.map(insight => ({
     ...insight,
-    latitude: 51.5074 + (Math.random() - 0.5) * 0.1, // Mock London area
-    longitude: -0.1278 + (Math.random() - 0.5) * 0.1,
+    latitude: null, // No coordinates available
+    longitude: null,
   }));
 
   const categoryTypes = [
@@ -246,28 +273,36 @@ const Map = () => {
       </Header>
 
       <div style={{ position: 'relative' }}>
-        <MapWrapper>
-          <MapContainer
-            center={[51.5074, -0.1278]} // London coordinates
-            zoom={10}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            
-            <FitBounds insights={locationInsights} />
-            
-            {locationInsights.map((insight, index) => (
-              <SentimentMarker
-                key={`${insight.id}-${index}`}
-                insight={insight}
-                position={[insight.latitude, insight.longitude]}
+        {filteredInsights.length === 0 ? (
+          <NoPlacesMessage>
+            <MapPin size={48} />
+            <h3>No Places Found</h3>
+            <p>No places have been identified in your entries yet. Places will appear here once they are detected and geo-located.</p>
+          </NoPlacesMessage>
+        ) : (
+          <MapWrapper>
+            <MapContainer
+              center={[51.5074, -0.1278]} // London coordinates
+              zoom={10}
+              style={{ height: '100%', width: '100%' }}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
-            ))}
-          </MapContainer>
-        </MapWrapper>
+              
+              <FitBounds insights={locationInsights} />
+              
+              {locationInsights.map((insight, index) => (
+                <SentimentMarker
+                  key={`${insight.id}-${index}`}
+                  insight={insight}
+                  position={[insight.latitude, insight.longitude]}
+                />
+              ))}
+            </MapContainer>
+          </MapWrapper>
+        )}
 
         <Legend
           initial={{ opacity: 0, x: 20 }}

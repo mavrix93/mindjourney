@@ -4,10 +4,12 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import styled from 'styled-components';
 import Navigation from './components/Navigation';
 import ParticleBackground from './components/ParticleBackground';
+import CategoryEntries from './pages/CategoryEntries';
 import CreateEntry from './pages/CreateEntry';
 import EntryDetail from './pages/EntryDetail';
 import Home from './pages/Home';
 import Map from './pages/Map';
+import Places from './pages/Places';
 import Timeline from './pages/Timeline';
 
 const queryClient = new QueryClient({
@@ -42,8 +44,10 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/timeline" element={<Timeline />} />
               <Route path="/map" element={<Map />} />
+              <Route path="/places" element={<Places />} />
               <Route path="/create" element={<CreateEntry />} />
               <Route path="/entry/:id" element={<EntryDetail />} />
+              <Route path="/category/:categoryName/:categoryType?" element={<CategoryEntries />} />
             </Routes>
           </MainContent>
           <Navigation />

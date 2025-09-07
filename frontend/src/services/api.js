@@ -112,6 +112,15 @@ export const getSentimentSummary = async () => {
   return response.data;
 };
 
+export const getEntriesByCategory = async (categoryName, categoryType = null) => {
+  const params = { category_name: categoryName };
+  if (categoryType) {
+    params.category_type = categoryType;
+  }
+  const response = await api.get('/insights/entries_by_category/', { params });
+  return response.data;
+};
+
 export const searchInsights = async (query) => {
   const response = await api.get('/insights/search/', { params: { q: query } });
   return response.data;

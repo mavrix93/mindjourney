@@ -58,3 +58,37 @@ class InsightViewSet(viewsets.ModelViewSet):
         insights = self.get_queryset().filter(text_snippet__icontains=query)
         serializer = self.get_serializer(insights, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def entries_by_category(self, request):
+        """Get all entries that have insights for a specific category"""
+        category_name = request.query_params.get("category_name")
+        category_type = request.query_params.get("category_type")
+
+        if not category_name and not category_type:
+            return Response(
+                {"error": "category_name or category_type parameter required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Get insights for the category
+        insights_queryset = self.get_queryset()
+        if category_name:
+            insights_queryset = insights_queryset.filter(
+                category__name__icontains=category_name
+            )
+        if category_type:
+            insights_queryset = insights_queryset.filter(
+                category__category_type=category_type
+            )
+
+        # Get unique entries from these insights
+        entries = set()
+        for insight in insights_queryset:
+            entries.add(insight.entry)
+
+        # Serialize entries
+        from entries.serializers import EntrySerializer
+
+        serializer = EntrySerializer(list(entries), many=True)
+        return Response(serializer.data)
