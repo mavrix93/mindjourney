@@ -137,8 +137,8 @@ except ImportError:
     # Celery not installed, skip configuration
     pass
 
-# OpenAI Configuration
-OPENAI_API_KEY = config("OPENAI_API_KEY", default="")
+# Gemini Configuration
+GEMINI_API_KEY = config("GEMINI_API_KEY", default="")
 
 # Logging
 LOGGING = {
