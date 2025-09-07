@@ -1,47 +1,65 @@
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
-import api, { getEntries, getEntry, createEntry, updateEntry, deleteEntry } from '../api';
+// Mock axios as a virtual CJS module to avoid ESM parsing issues in Jest
+jest.mock('axios', () => {
+  const instance = {
+    get: jest.fn(),
+    post: jest.fn(),
+    patch: jest.fn(),
+    delete: jest.fn(),
+    defaults: { baseURL: '', headers: {}, withCredentials: false },
+    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+  };
+  const axios = {
+    create: jest.fn(() => instance),
+    __instance: instance,
+  };
+  return {
+    __esModule: true,
+    default: axios,
+    create: axios.create,
+  };
+}, { virtual: true });
+
+const { default: api, getEntries, getEntry, createEntry, updateEntry, deleteEntry } = require('../api');
 
 describe('api service - entries', () => {
-  let mock;
-
-  beforeEach(() => {
-    mock = new MockAdapter(api);
-  });
-
   afterEach(() => {
-    mock.reset();
+    jest.restoreAllMocks();
   });
 
   test('getEntries returns list', async () => {
     const data = [{ id: 1 }, { id: 2 }];
-    mock.onGet('/entries/').reply(200, data);
+    jest.spyOn(api, 'get').mockResolvedValueOnce({ data });
     await expect(getEntries()).resolves.toEqual(data);
+    expect(api.get).toHaveBeenCalledWith('/entries/');
   });
 
   test('getEntry returns by id', async () => {
     const item = { id: 42 };
-    mock.onGet('/entries/42/').reply(200, item);
+    jest.spyOn(api, 'get').mockResolvedValueOnce({ data: item });
     await expect(getEntry(42)).resolves.toEqual(item);
+    expect(api.get).toHaveBeenCalledWith('/entries/42/');
   });
 
   test('createEntry posts data', async () => {
     const payload = { title: 't', content: 'c' };
     const created = { id: 10, ...payload };
-    mock.onPost('/entries/').reply(201, created);
+    jest.spyOn(api, 'post').mockResolvedValueOnce({ data: created });
     await expect(createEntry(payload)).resolves.toEqual(created);
+    expect(api.post).toHaveBeenCalledWith('/entries/', payload);
   });
 
   test('updateEntry patches by id', async () => {
     const payload = { title: 'nt' };
     const updated = { id: 1, title: 'nt' };
-    mock.onPatch('/entries/1/').reply(200, updated);
+    jest.spyOn(api, 'patch').mockResolvedValueOnce({ data: updated });
     await expect(updateEntry(1, payload)).resolves.toEqual(updated);
+    expect(api.patch).toHaveBeenCalledWith('/entries/1/', payload);
   });
 
   test('deleteEntry deletes by id', async () => {
-    mock.onDelete('/entries/1/').reply(204, {});
+    jest.spyOn(api, 'delete').mockResolvedValueOnce({ data: {} });
     await expect(deleteEntry(1)).resolves.toEqual({});
+    expect(api.delete).toHaveBeenCalledWith('/entries/1/');
   });
 });
 
