@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { Heart, MapPin, Star, TrendingUp } from 'lucide-react';
+import { Heart, MapPin, Sparkles, Star, TrendingUp } from 'lucide-react';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import styled from 'styled-components';
 import { getEntries, getPublicEntries } from '../services/api';
@@ -90,18 +91,21 @@ const SectionTitle = styled.h2`
 `;
 
 const EntryCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(138, 43, 226, 0.3);
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(138, 43, 226, 0.4);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 15px;
   backdrop-filter: blur(10px);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(138, 43, 226, 0.15);
 
   &:hover {
-    border-color: rgba(138, 43, 226, 0.6);
-    box-shadow: 0 0 20px rgba(138, 43, 226, 0.2);
+    transform: translateY(-2px);
+    border-color: rgba(138, 43, 226, 0.7);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 16px 40px rgba(138, 43, 226, 0.25);
   }
 `;
 
@@ -126,6 +130,26 @@ const EntryMeta = styled.div`
   color: rgba(255, 255, 255, 0.5);
 `;
 
+const EntryInsights = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+`;
+
+const InsightChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(138, 43, 226, 0.15);
+  border: 1px solid rgba(138, 43, 226, 0.35);
+  color: #b792ff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  letter-spacing: 0.2px;
+`;
+
 const SentimentBadge = styled.span`
   padding: 4px 8px;
   border-radius: 12px;
@@ -144,6 +168,7 @@ const SentimentBadge = styled.span`
 `;
 
 const Home = () => {
+  const navigate = useNavigate();
   const { data: entries, isLoading: entriesLoading } = useQuery(
     'entries',
     getEntries,
@@ -231,6 +256,7 @@ const Home = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 1.4 + index * 0.1 }}
               whileHover={{ x: 5 }}
+              onClick={() => navigate(`/entry/${entry.id}`)}
             >
               <EntryTitle>{entry.title || 'Untitled Entry'}</EntryTitle>
               <EntryContent>
@@ -239,6 +265,18 @@ const Home = () => {
                   : entry.content
                 }
               </EntryContent>
+              {entry.insights && entry.insights.length > 0 && (
+                <EntryInsights>
+                  {entry.insights.slice(0, 3).map((insight) => (
+                    <InsightChip key={insight.id}>
+                      <Sparkles size={12} /> {insight.category.name}
+                    </InsightChip>
+                  ))}
+                  {entry.insights.length > 3 && (
+                    <InsightChip>+{entry.insights.length - 3} more</InsightChip>
+                  )}
+                </EntryInsights>
+              )}
               <EntryMeta>
                 <span>{new Date(entry.created_at).toLocaleDateString()}</span>
                 {entry.overall_sentiment !== null && (
@@ -276,6 +314,7 @@ const Home = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 1.8 + index * 0.1 }}
               whileHover={{ x: 5 }}
+              onClick={() => navigate(`/entry/${entry.id}`)}
             >
               <EntryTitle>{entry.title || 'Untitled Entry'}</EntryTitle>
               <EntryContent>
@@ -284,6 +323,18 @@ const Home = () => {
                   : entry.content
                 }
               </EntryContent>
+              {entry.insights && entry.insights.length > 0 && (
+                <EntryInsights>
+                  {entry.insights.slice(0, 3).map((insight) => (
+                    <InsightChip key={insight.id}>
+                      <Sparkles size={12} /> {insight.category.name}
+                    </InsightChip>
+                  ))}
+                  {entry.insights.length > 3 && (
+                    <InsightChip>+{entry.insights.length - 3} more</InsightChip>
+                  )}
+                </EntryInsights>
+              )}
               <EntryMeta>
                 <span>by {entry.user} • {new Date(entry.created_at).toLocaleDateString()}</span>
                 {entry.overall_sentiment !== null && (
