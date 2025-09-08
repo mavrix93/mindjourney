@@ -56,38 +56,32 @@ def main() -> None:
 
     # Import after Django is configured
     from insights.ai_service import AIInsightExtractor, InsightData
-    from returns.result import Success, Failure
 
     text = load_input_text(args)
 
     extractor = AIInsightExtractor()
-    result = extractor.extract_insights(text)
-
-    match result:
-        case Success(insights):
-            payload = [
-                {
-                    "text_snippet": ins.text_snippet,
-                    "category_name": ins.category_name,
-                    "category_type": ins.category_type,
-                    "sentiment_score": ins.sentiment_score,
-                    "confidence_score": ins.confidence_score,
-                    "start_position": ins.start_position,
-                    "end_position": ins.end_position,
-                }
-                for ins in insights
-            ]
-            if args.pretty:
-                print(json.dumps(payload, indent=2, ensure_ascii=False))
-            else:
-                print(json.dumps(payload, ensure_ascii=False))
-            sys.exit(0)
-        case Failure(error):
-            print(f"Error: {error}")
-            sys.exit(1)
-        case _:
-            print("Unexpected result from AI service.")
-            sys.exit(2)
+    try:
+        insights = extractor.extract_insights(text)
+        payload = [
+            {
+                "text_snippet": ins.text_snippet,
+                "category_name": ins.category_name,
+                "category_type": ins.category_type,
+                "sentiment_score": ins.sentiment_score,
+                "confidence_score": ins.confidence_score,
+                "start_position": ins.start_position,
+                "end_position": ins.end_position,
+            }
+            for ins in insights
+        ]
+        if args.pretty:
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
+        else:
+            print(json.dumps(payload, ensure_ascii=False))
+        sys.exit(0)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
