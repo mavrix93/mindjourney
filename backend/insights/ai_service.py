@@ -4,7 +4,6 @@ import json
 from typing import List, Dict, Any
 from google.api_core.exceptions import GoogleAPIError
 from django.conf import settings
-from returns.result import Result, Success, Failure
 from pydantic import BaseModel, Field
 
 
@@ -41,34 +40,29 @@ class AIInsightExtractor:
         # Use a strong default model; can be overridden later if needed
         self.model = genai.GenerativeModel("gemini-1.5-pro")
 
-    def extract_insights(self, content: str) -> Result[List[InsightData], str]:
+    def extract_insights(self, content: str) -> List[InsightData]:
         """Extract insights from diary entry content"""
-        try:
-            if not settings.GEMINI_API_KEY:
-                return Failure("Gemini API key not configured")
+        if not settings.GEMINI_API_KEY:
+            raise RuntimeError("Gemini API key not configured")
 
-            prompt = self._build_prompt(content)
-            # Generate content with Gemini
-            response = self.model.generate_content(prompt)
+        prompt = self._build_prompt(content)
+        # Generate content with Gemini
+        response = self.model.generate_content(prompt)
 
-            # google-generativeai returns text on .text
-            insights_text = getattr(response, "text", None)
-            if not insights_text:
-                return Failure("Empty response from Gemini API")
-            insights_data = self._parse_insights(insights_text, content)
+        # google-generativeai returns text on .text
+        insights_text = getattr(response, "text", None)
+        if not insights_text:
+            raise ValueError("Empty response from Gemini API")
+        insights_data = self._parse_insights(insights_text, content)
 
-            return Success(insights_data)
+        return insights_data
 
-        except (GoogleAPIError, Exception) as e:
-            return Failure(f"Error extracting insights: {str(e)}")
-
-    def generate_title(self, content: str) -> Result[str, str]:
+    def generate_title(self, content: str) -> str:
         """Generate a title for diary entry content"""
-        try:
-            if not settings.GEMINI_API_KEY:
-                return Failure("Gemini API key not configured")
+        if not settings.GEMINI_API_KEY:
+            raise RuntimeError("Gemini API key not configured")
 
-            prompt = f"""
+        prompt = f"""
 Generate a short, descriptive title (maximum 5 words) for this diary entry. The title should capture the main subject or event mentioned.
 
 Diary entry:
@@ -77,16 +71,13 @@ Diary entry:
 Return only the title, nothing else.
 """
 
-            response = self.model.generate_content(prompt)
-            title = getattr(response, "text", "").strip()
+        response = self.model.generate_content(prompt)
+        title = getattr(response, "text", "").strip()
 
-            if not title:
-                return Failure("Empty response from Gemini API")
+        if not title:
+            raise ValueError("Empty response from Gemini API")
 
-            return Success(title)
-
-        except (GoogleAPIError, Exception) as e:
-            return Failure(f"Error generating title: {str(e)}")
+        return title
 
     def _build_prompt(self, content: str) -> str:
         """Build the prompt for AI insight extraction"""

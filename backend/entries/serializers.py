@@ -49,9 +49,6 @@ class EntrySerializer(serializers.ModelSerializer):
             "updated_at",
             "overall_sentiment",
             "insights_processed",
-            "latitude",
-            "longitude",
-            "location_name",
         ]
 
 
