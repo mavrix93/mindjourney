@@ -134,6 +134,15 @@ async function main() {
   try {
     const page = await browser.newPage();
 
+    // Helper to wait for text to appear on the page body. More reliable than Puppeteer's text/ selectors.
+    async function waitForText(targetText, timeoutMs = 10000) {
+      await page.waitForFunction(
+        (text) => document && document.body && document.body.innerText && document.body.innerText.includes(text),
+        { timeout: timeoutMs },
+        targetText,
+      );
+    }
+
     await page.setRequestInterception(true);
     page.on('request', async (req) => {
       const url = req.url();
@@ -163,17 +172,17 @@ async function main() {
 
     // HOME
     await page.goto(`${ORIGIN}/`, { waitUntil: 'networkidle0' });
-    await page.waitForSelector('text/MindJourney');
+    await waitForText('MindJourney');
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'home.png'), fullPage: true });
 
     // ENTRY DETAIL
-    await page.goto(`${ORIGIN}/entry/1`, { waitUntil: 'networkidle0' });
-    await page.waitForSelector('text/AI Insights', { timeout: 5000 }).catch(() => {});
+    await page.goto(`${ORIGIN}/entry/1", { waitUntil: 'networkidle0' });
+    await waitForText('AI Insights').catch(() => {});
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'entry_detail.png'), fullPage: true });
 
     // TIMELINE
     await page.goto(`${ORIGIN}/timeline`, { waitUntil: 'networkidle0' });
-    await page.waitForSelector('text/Timeline', { timeout: 5000 }).catch(() => {});
+    await waitForText('Timeline').catch(() => {});
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'timeline.png'), fullPage: true });
 
     console.log('Screenshots saved to:', SCREENSHOTS_DIR);
