@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.conf import settings
 
 
 class Entry(models.Model):
@@ -12,6 +13,9 @@ class Entry(models.Model):
     is_public = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Faces (personas/groups) linked to this entry
+    # Import is local in type hint to avoid import cycle during app loading
+    faces = models.ManyToManyField("faces.Face", related_name="entries", blank=True)
 
     # Overall sentiment for the entry
     overall_sentiment = models.FloatField(

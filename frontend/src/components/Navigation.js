@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Clock, Home, MapPin, Plus, User } from 'lucide-react';
+import { Clock, Home, MapPin, Plus, User, Tags } from 'lucide-react';
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -54,6 +54,7 @@ const NavLabel = styled.span`
 const navigationItems = [
   { path: '/', icon: Home, label: 'Home' },
   { path: '/timeline', icon: Clock, label: 'Timeline' },
+  { path: '/faces', icon: Tags, label: 'Faces' },
   { path: '/places', icon: MapPin, label: 'Places' },
   { path: '/create', icon: Plus, label: 'Create' },
   { path: '/profile', icon: User, label: 'Profile' },

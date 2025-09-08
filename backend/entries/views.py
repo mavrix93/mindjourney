@@ -91,6 +91,17 @@ class EntryViewSet(viewsets.ModelViewSet):
                 insights__category__name__icontains=category
             ).distinct()
 
+        # Filter by selected faces (comma-separated IDs)
+        face_ids = request.query_params.get("face_ids")
+        if face_ids:
+            try:
+                id_list = [int(fid) for fid in face_ids.split(",") if fid.strip()]
+                for fid in id_list:
+                    queryset = queryset.filter(faces__id=fid)
+                queryset = queryset.distinct()
+            except ValueError:
+                pass
+
         # Filter by sentiment range
         min_sentiment = request.query_params.get("min_sentiment")
         max_sentiment = request.query_params.get("max_sentiment")
