@@ -7,7 +7,6 @@ except ImportError:
 
 
 from django.db import transaction
-from common.result import Result, Success, Failure
 from .models import Insight
 from .ai_service import AIInsightExtractor, InsightData
 from .geocoding_service import AIGeocodingService
@@ -27,10 +26,7 @@ def extract_insights_task(entry_id: int) -> bool:
 
             # Extract new insights
             extractor = AIInsightExtractor()
-            insights_result = extractor.extract_insights(entry.content)
-
-            if insights_result.is_successful():
-                insights_data = insights_result.value
+            insights_data = extractor.extract_insights(entry.content)
                 # Create categories and insights
                 created_insights = []
                 for insight_data in insights_data:
@@ -59,35 +55,25 @@ def extract_insights_task(entry_id: int) -> bool:
 
                 # Try to geocode places mentioned in the entry
                 geocoding_service = AIGeocodingService()
-                geocoding_result = geocoding_service.extract_and_geocode_places(
+                geocoded_places = geocoding_service.extract_and_geocode_places(
                     entry.content
                 )
 
-                if geocoding_result.is_successful():
-                    geocoded_places = geocoding_result.value
-                    if geocoded_places:
-                        # Use the first (most confident) place as the main location
-                        main_place = geocoded_places[0]
-                        entry.latitude = main_place["latitude"]
-                        entry.longitude = main_place["longitude"]
-                        entry.location_name = main_place["full_name"]
-                        print(
-                            f"Geocoded entry {entry_id} to {main_place['full_name']} at {main_place['latitude']}, {main_place['longitude']}"
-                        )
-                    else:
-                        print(f"No places found to geocode for entry {entry_id}")
-                else:
+                if geocoded_places:
+                    # Use the first (most confident) place as the main location
+                    main_place = geocoded_places[0]
+                    entry.latitude = main_place["latitude"]
+                    entry.longitude = main_place["longitude"]
+                    entry.location_name = main_place["full_name"]
                     print(
-                        f"Geocoding failed for entry {entry_id}: {geocoding_result.failure()}"
+                        f"Geocoded entry {entry_id} to {main_place['full_name']} at {main_place['latitude']}, {main_place['longitude']}"
                     )
+                else:
+                    print(f"No places found to geocode for entry {entry_id}")
 
                 entry.save()
                 return True
-            else:
-                error = insights_result.failure()
-                # Log the error but don't return Failure object
-                print(f"Failed to extract insights for entry {entry_id}: {error}")
-                return False
+            return True
 
     except Entry.DoesNotExist:
         print(f"Entry with id {entry_id} not found")

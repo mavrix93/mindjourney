@@ -31,17 +31,23 @@ class FaceViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="subscribe")
     def subscribe(self, request, pk=None):
         face = self.get_object()
-        if not request.user.is_authenticated:
-            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-        sub, _ = UserFaceSubscription.objects.get_or_create(user=request.user, face=face)
+        # Demo mode: create a demo user if unauthenticated so UI can subscribe
+        user = request.user
+        if not user.is_authenticated:
+            from django.contrib.auth.models import User
+            user, _ = User.objects.get_or_create(username="demo_user", defaults={"email": "demo@example.com"})
+        sub, _ = UserFaceSubscription.objects.get_or_create(user=user, face=face)
         return Response({"status": "subscribed", "subscription_id": sub.id})
 
     @action(detail=True, methods=["post"], url_path="unsubscribe")
     def unsubscribe(self, request, pk=None):
         face = self.get_object()
-        if not request.user.is_authenticated:
-            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-        UserFaceSubscription.objects.filter(user=request.user, face=face).delete()
+        # Demo mode: operate on demo user if unauthenticated
+        user = request.user
+        if not user.is_authenticated:
+            from django.contrib.auth.models import User
+            user, _ = User.objects.get_or_create(username="demo_user", defaults={"email": "demo@example.com"})
+        UserFaceSubscription.objects.filter(user=user, face=face).delete()
         return Response({"status": "unsubscribed"})
 
 
