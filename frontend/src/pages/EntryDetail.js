@@ -414,6 +414,7 @@ const EntryDetail = () => {
                 onClick={handleEdit}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                data-testid="edit-entry-button"
               >
                 <Edit size={16} />
                 Edit

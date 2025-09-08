@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import L from 'leaflet';
-import { Filter, Layers, MapPin } from 'lucide-react';
+import { Filter, Layers, MapPin, Map as MapIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useQuery } from 'react-query';
@@ -61,6 +61,23 @@ const FilterButton = styled(motion.button)`
   
   &:hover {
     background: rgba(110, 86, 207, 0.24);
+  }
+`;
+
+const SetLocationsButton = styled(motion.button)`
+  background: rgba(60, 179, 113, 0.18);
+  border: 1px solid rgba(60, 179, 113, 0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #9be7c4;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  
+  &:hover {
+    background: rgba(60, 179, 113, 0.24);
   }
 `;
 
@@ -221,6 +238,7 @@ const FitBounds = ({ insights }) => {
 
 const Map = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [useDemoLocations, setUseDemoLocations] = useState(false);
   
   const { data: insights, isLoading } = useQuery(
     'insights',
@@ -246,11 +264,17 @@ const Map = () => {
 
   // For now, we'll show a message that geo-location needs to be set manually
   // In a real app, you'd geocode the place names or store coordinates
-  const locationInsights = filteredInsights.map(insight => ({
-    ...insight,
-    latitude: null, // No coordinates available
-    longitude: null,
-  }));
+  const locationInsights = filteredInsights.map(insight => {
+    if (!useDemoLocations) {
+      return { ...insight, latitude: null, longitude: null };
+    }
+    const place = (insight.category?.name || '').toLowerCase();
+    let coords = null;
+    if (place.includes('prague')) coords = { lat: 50.0755, lng: 14.4378 };
+    if (place.includes('bratislava')) coords = { lat: 48.1486, lng: 17.1077 };
+    if (!coords) return { ...insight, latitude: null, longitude: null };
+    return { ...insight, latitude: coords.lat, longitude: coords.lng };
+  });
 
   const categoryTypes = [
     { value: 'all', label: 'All Places' },
@@ -272,6 +296,15 @@ const Map = () => {
             <Filter size={16} />
             Filter
           </FilterButton>
+          <SetLocationsButton
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setUseDemoLocations(true)}
+            data-testid="set-demo-locations"
+          >
+            <MapIcon size={16} />
+            Set demo locations
+          </SetLocationsButton>
         </Controls>
       </Header>
 
