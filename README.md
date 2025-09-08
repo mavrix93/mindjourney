@@ -2,6 +2,20 @@
 
 A beautiful, modern diary application that uses AI to extract insights from your entries, categorize experiences, and analyze sentiment. Built with Django and React, featuring a stunning dark star theme with particle effects.
 
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/home.png" alt="Home" width="800" />
+</p>
+
+<p align="center">
+  <img src="screenshots/entry_detail.png" alt="Entry Detail" width="800" />
+</p>
+
+<p align="center">
+  <img src="screenshots/timeline.png" alt="Timeline" width="800" />
+</p>
+
 ## Features
 
 ### 🎨 Beautiful UI
