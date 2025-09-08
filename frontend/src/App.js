@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import Map from './pages/Map';
 import Places from './pages/Places';
 import Timeline from './pages/Timeline';
+import Faces from './pages/Faces';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,6 +46,7 @@ function App() {
               <Route path="/timeline" element={<Timeline />} />
               <Route path="/map" element={<Map />} />
               <Route path="/places" element={<Places />} />
+              <Route path="/faces" element={<Faces />} />
               <Route path="/create" element={<CreateEntry />} />
               <Route path="/entry/:id" element={<EntryDetail />} />
               <Route path="/category/:categoryName/:categoryType?" element={<CategoryEntries />} />

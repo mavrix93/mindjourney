@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Entry, EntryDocument
+from faces.models import Face
+from faces.serializers import FaceSerializer
 from insights.serializers import InsightSerializer
 
 
@@ -15,6 +17,10 @@ class EntrySerializer(serializers.ModelSerializer):
     documents = EntryDocumentSerializer(many=True, read_only=True)
     insights = InsightSerializer(many=True, read_only=True)
     user = serializers.StringRelatedField(read_only=True)
+    faces = FaceSerializer(many=True, read_only=True)
+    face_ids = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Face.objects.all(), write_only=True, required=False, source="faces"
+    )
 
     class Meta:
         model = Entry
@@ -24,6 +30,7 @@ class EntrySerializer(serializers.ModelSerializer):
             "title",
             "content",
             "is_public",
+            "faces",
             "overall_sentiment",
             "insights_processed",
             "latitude",
@@ -33,6 +40,7 @@ class EntrySerializer(serializers.ModelSerializer):
             "updated_at",
             "documents",
             "insights",
+            "face_ids",
         ]
         read_only_fields = [
             "id",
@@ -48,9 +56,12 @@ class EntrySerializer(serializers.ModelSerializer):
 
 
 class EntryCreateSerializer(serializers.ModelSerializer):
+    face_ids = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Face.objects.all(), write_only=True, required=False, source="faces"
+    )
     class Meta:
         model = Entry
-        fields = ["id", "title", "content", "is_public"]
+        fields = ["id", "title", "content", "is_public", "face_ids"]
         read_only_fields = ["id"]
 
 

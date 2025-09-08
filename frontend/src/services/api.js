@@ -159,4 +159,31 @@ export const getCategoriesByType = async (type) => {
   return response.data;
 };
 
+// Faces API
+export const getFaces = async () => {
+  const response = await api.get('/faces/');
+  return response.data.results || response.data;
+};
+
+export const getSubscribedFaces = async () => {
+  const response = await api.get('/faces/subscribed/');
+  return response.data.results || response.data;
+};
+
+export const createFace = async (faceData) => {
+  const response = await api.post('/faces/', faceData);
+  return response.data;
+};
+
+export const subscribeFace = async (faceId) => {
+  const response = await api.post(`/faces/${faceId}/subscribe/`);
+  return response.data;
+};
+
+export const unsubscribeFace = async (faceId) => {
+  const response = await api.post(`/faces/${faceId}/unsubscribe/`);
+  return response.data;
+};
+
+
 export default api;
