@@ -176,7 +176,7 @@ async function main() {
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'home.png'), fullPage: true });
 
     // ENTRY DETAIL
-    await page.goto(`${ORIGIN}/entry/1", { waitUntil: 'networkidle0' });
+    await page.goto(`${ORIGIN}/entry/1`, { waitUntil: 'networkidle0' });
     await waitForText('AI Insights').catch(() => {});
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'entry_detail.png'), fullPage: true });
 

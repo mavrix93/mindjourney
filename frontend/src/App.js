@@ -25,7 +25,9 @@ const queryClient = new QueryClient({
 const AppContainer = styled.div`
   min-height: 100vh;
   position: relative;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #16213e 100%);
+  background: radial-gradient(1200px circle at 10% 10%, rgba(110, 86, 207, 0.12), transparent 40%),
+              radial-gradient(1000px circle at 90% 20%, rgba(30, 144, 255, 0.10), transparent 40%),
+              linear-gradient(180deg, #0b0b0b 0%, #0f0f10 100%);
 `;
 
 const MainContent = styled.main`

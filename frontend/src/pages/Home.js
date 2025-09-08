@@ -7,85 +7,76 @@ import styled from 'styled-components';
 import { getEntries, getPublicEntries } from '../services/api';
 
 const Container = styled.div`
-  min-height: calc(100vh - 80px); /* Account for bottom navigation */
-  padding: 20px;
-  padding-top: 60px;
-  padding-bottom: 100px; /* Extra space for bottom navigation */
+  min-height: calc(100vh - 64px);
+  padding: 24px;
+  padding-top: 72px;
+  padding-bottom: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
 `;
 
 const Header = styled(motion.div)`
-  text-align: center;
-  margin-bottom: 40px;
+  text-align: left;
+  margin-bottom: 32px;
 `;
 
 const Title = styled(motion.h1)`
-  font-size: 2.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #8a2be2, #ff6b6b, #4ecdc4);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradient 3s ease infinite;
-  margin-bottom: 10px;
-
-  @keyframes gradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #e6e6e6;
+  margin-bottom: 8px;
 `;
 
 const Subtitle = styled(motion.p)`
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 300;
+  color: rgba(230, 230, 230, 0.75);
+  font-weight: 400;
 `;
 
 const StatsGrid = styled(motion.div)`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0 24px;
 `;
 
 const StatCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 16px;
-  padding: 20px;
-  text-align: center;
-  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: left;
+  backdrop-filter: blur(8px);
 `;
 
 const StatIcon = styled.div`
-  color: #8a2be2;
-  margin-bottom: 10px;
+  color: #c6b9ff;
+  margin-bottom: 8px;
   display: flex;
-  justify-content: center;
 `;
 
 const StatValue = styled.div`
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 5px;
+  color: #e6e6e6;
+  margin-bottom: 4px;
 `;
 
 const StatLabel = styled.div`
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  color: rgba(230, 230, 230, 0.6);
 `;
 
 const RecentEntries = styled(motion.div)`
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 20px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e6e6e6;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -94,33 +85,33 @@ const SectionTitle = styled.h2`
 const EntryCard = styled(motion.div)`
   position: relative;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
-  border: 1px solid rgba(138, 43, 226, 0.4);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 15px;
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(8px);
   cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(138, 43, 226, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(110, 86, 207, 0.18);
 
   &:hover {
     transform: translateY(-2px);
-    border-color: rgba(138, 43, 226, 0.7);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 16px 40px rgba(138, 43, 226, 0.25);
+    border-color: rgba(110, 86, 207, 0.45);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 36px rgba(110, 86, 207, 0.25);
   }
 `;
 
 const EntryTitle = styled.h3`
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e6e6e6;
+  margin-bottom: 6px;
 `;
 
 const EntryContent = styled.p`
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(230, 230, 230, 0.75);
   line-height: 1.5;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 `;
 
 const EntryMeta = styled.div`
@@ -128,7 +119,7 @@ const EntryMeta = styled.div`
   justify-content: space-between;
   align-items: center;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(230, 230, 230, 0.6);
 `;
 
 const EntryInsights = styled.div`
@@ -142,12 +133,12 @@ const InsightChip = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(138, 43, 226, 0.15);
-  border: 1px solid rgba(138, 43, 226, 0.35);
-  color: #b792ff;
+  background: rgba(110, 86, 207, 0.18);
+  border: 1px solid rgba(110, 86, 207, 0.35);
+  color: #c6b9ff;
   border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 0.7rem;
+  padding: 3px 10px;
+  font-size: 0.72rem;
   letter-spacing: 0.2px;
 `;
 
@@ -157,14 +148,14 @@ const SentimentBadge = styled.span`
   font-size: 0.7rem;
   font-weight: 500;
   background: ${props => {
-    if (props.sentiment > 0.3) return 'rgba(76, 175, 80, 0.2)';
-    if (props.sentiment < -0.3) return 'rgba(244, 67, 54, 0.2)';
-    return 'rgba(255, 193, 7, 0.2)';
+    if (props.sentiment > 0.3) return 'rgba(52, 199, 89, 0.18)';
+    if (props.sentiment < -0.3) return 'rgba(255, 69, 58, 0.18)';
+    return 'rgba(255, 204, 0, 0.18)';
   }};
   color: ${props => {
-    if (props.sentiment > 0.3) return '#4caf50';
-    if (props.sentiment < -0.3) return '#f44336';
-    return '#ffc107';
+    if (props.sentiment > 0.3) return '#34c759';
+    if (props.sentiment < -0.3) return '#ff453a';
+    return '#ffcc00';
   }};
 `;
 
