@@ -5,13 +5,13 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #0a0a0a;
-  color: #ffffff;
+  color: #e6e6e6;
   overflow-x: hidden;
 }
 
@@ -47,6 +47,6 @@ code {
 
 /* Focus styles */
 *:focus {
-  outline: 2px solid #8a2be2;
+  outline: 2px solid #6e56cf;
   outline-offset: 2px;
 }
