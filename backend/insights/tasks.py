@@ -27,52 +27,51 @@ def extract_insights_task(entry_id: int) -> bool:
             # Extract new insights
             extractor = AIInsightExtractor()
             insights_data = extractor.extract_insights(entry.content)
-                # Create categories and insights
-                created_insights = []
-                for insight_data in insights_data:
-                    category, created = Category.objects.get_or_create(
-                        name=insight_data.category_name,
-                        defaults={"category_type": insight_data.category_type},
-                    )
-
-                    insight = Insight.objects.create(
-                        entry=entry,
-                        category=category,
-                        text_snippet=insight_data.text_snippet,
-                        sentiment_score=insight_data.sentiment_score,
-                        confidence_score=insight_data.confidence_score,
-                        start_position=insight_data.start_position,
-                        end_position=insight_data.end_position,
-                    )
-                    created_insights.append(insight)
-
-                # Update overall sentiment and mark as processed
-                overall_sentiment = extractor.calculate_overall_sentiment(
-                    insights_data
-                )
-                entry.overall_sentiment = overall_sentiment
-                entry.insights_processed = True
-
-                # Try to geocode places mentioned in the entry
-                geocoding_service = AIGeocodingService()
-                geocoded_places = geocoding_service.extract_and_geocode_places(
-                    entry.content
+            # Create categories and insights
+            created_insights = []
+            for insight_data in insights_data:
+                category, created = Category.objects.get_or_create(
+                    name=insight_data.category_name,
+                    defaults={"category_type": insight_data.category_type},
                 )
 
-                if geocoded_places:
-                    # Use the first (most confident) place as the main location
-                    main_place = geocoded_places[0]
-                    entry.latitude = main_place["latitude"]
-                    entry.longitude = main_place["longitude"]
-                    entry.location_name = main_place["full_name"]
-                    print(
-                        f"Geocoded entry {entry_id} to {main_place['full_name']} at {main_place['latitude']}, {main_place['longitude']}"
-                    )
-                else:
-                    print(f"No places found to geocode for entry {entry_id}")
+                insight = Insight.objects.create(
+                    entry=entry,
+                    category=category,
+                    text_snippet=insight_data.text_snippet,
+                    sentiment_score=insight_data.sentiment_score,
+                    confidence_score=insight_data.confidence_score,
+                    start_position=insight_data.start_position,
+                    end_position=insight_data.end_position,
+                )
+                created_insights.append(insight)
 
-                entry.save()
-                return True
+            # Update overall sentiment and mark as processed
+            overall_sentiment = extractor.calculate_overall_sentiment(
+                insights_data
+            )
+            entry.overall_sentiment = overall_sentiment
+            entry.insights_processed = True
+
+            # Try to geocode places mentioned in the entry
+            geocoding_service = AIGeocodingService()
+            geocoded_places = geocoding_service.extract_and_geocode_places(
+                entry.content
+            )
+
+            if geocoded_places:
+                # Use the first (most confident) place as the main location
+                main_place = geocoded_places[0]
+                entry.latitude = main_place["latitude"]
+                entry.longitude = main_place["longitude"]
+                entry.location_name = main_place["full_name"]
+                print(
+                    f"Geocoded entry {entry_id} to {main_place['full_name']} at {main_place['latitude']}, {main_place['longitude']}"
+                )
+            else:
+                print(f"No places found to geocode for entry {entry_id}")
+
+            entry.save()
             return True
 
     except Entry.DoesNotExist:
