@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes, Navigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Navigation from './components/Navigation';
 import ParticleBackground from './components/ParticleBackground';
@@ -11,6 +11,15 @@ import Home from './pages/Home';
 import Map from './pages/Map';
 import Places from './pages/Places';
 import Timeline from './pages/Timeline';
+import Login from './pages/Login';
+
+function RequireAuth({ children }) {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,13 +50,14 @@ function App() {
           <ParticleBackground />
           <MainContent>
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/timeline" element={<Timeline />} />
-              <Route path="/map" element={<Map />} />
-              <Route path="/places" element={<Places />} />
-              <Route path="/create" element={<CreateEntry />} />
-              <Route path="/entry/:id" element={<EntryDetail />} />
-              <Route path="/category/:categoryName/:categoryType?" element={<CategoryEntries />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
+              <Route path="/timeline" element={<RequireAuth><Timeline /></RequireAuth>} />
+              <Route path="/map" element={<RequireAuth><Map /></RequireAuth>} />
+              <Route path="/places" element={<RequireAuth><Places /></RequireAuth>} />
+              <Route path="/create" element={<RequireAuth><CreateEntry /></RequireAuth>} />
+              <Route path="/entry/:id" element={<RequireAuth><EntryDetail /></RequireAuth>} />
+              <Route path="/category/:categoryName/:categoryType?" element={<RequireAuth><CategoryEntries /></RequireAuth>} />
             </Routes>
           </MainContent>
           <Navigation />

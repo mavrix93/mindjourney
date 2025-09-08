@@ -159,4 +159,23 @@ export const getCategoriesByType = async (type) => {
   return response.data;
 };
 
+// Auth API
+export const login = async (username, password) => {
+  const response = await api.post('/auth/login/', { username, password });
+  const token = response.data?.token;
+  if (token) {
+    localStorage.setItem('authToken', token);
+  }
+  return response.data;
+};
+
+export const logout = async () => {
+  try {
+    await api.post('/auth/logout/');
+  } catch (e) {
+    // ignore
+  }
+  localStorage.removeItem('authToken');
+};
+
 export default api;

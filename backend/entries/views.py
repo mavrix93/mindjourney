@@ -20,15 +20,14 @@ except ImportError:
 
 class EntryViewSet(viewsets.ModelViewSet):
     serializer_class = EntrySerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         """Return entries for the authenticated user, or all entries if no user"""
         if self.request.user.is_authenticated:
             return Entry.objects.filter(user=self.request.user)
         else:
-            # For demo purposes, return all entries when not authenticated
-            return Entry.objects.all()
+            return Entry.objects.none()
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -37,15 +36,7 @@ class EntryViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create entry and trigger insight extraction"""
-        # For demo purposes, create a default user if none exists
-        from django.contrib.auth.models import User
-
-        if not self.request.user.is_authenticated:
-            user, created = User.objects.get_or_create(
-                username="demo_user", defaults={"email": "demo@example.com"}
-            )
-        else:
-            user = self.request.user
+        user = self.request.user
 
         # Generate title if not provided
         data = serializer.validated_data

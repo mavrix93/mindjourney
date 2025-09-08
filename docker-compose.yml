@@ -34,6 +34,7 @@ services:
     build: ./backend
     command: >
       sh -c "python manage.py migrate &&
+             python manage.py ensure_admin &&
              python manage.py collectstatic --noinput &&
              gunicorn --bind 0.0.0.0:8000 mindjourney.wsgi:application"
     environment:
@@ -46,6 +47,9 @@ services:
       - DB_PORT=5432
       - REDIS_URL=redis://redis:6379/0
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     volumes:
       - ./backend:/app
       - static_volume:/app/staticfiles
