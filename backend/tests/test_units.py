@@ -7,6 +7,8 @@ from entries.models import Entry
 @pytest.mark.django_db
 def test_create_entry_triggers_endpoint_and_returns_201():
     client = APIClient()
+    user = User.objects.create_user(username='tester', password='pass')
+    client.force_authenticate(user=user)
     payload = {"title": "t", "content": "c", "is_public": False}
     response = client.post('/api/entries/', payload, format='json')
     assert response.status_code in (201, 200)

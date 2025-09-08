@@ -70,7 +70,7 @@ class EntryViewSet(viewsets.ModelViewSet):
         if old_entry.content != entry.content:
             extract_insights_task.delay(entry.id)
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], permission_classes=[permissions.AllowAny])
     def public(self, request):
         """Get public entries from all users"""
         queryset = Entry.objects.filter(is_public=True).order_by("-created_at")
