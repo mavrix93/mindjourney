@@ -9,5 +9,4 @@ psycopg2-binary==2.9.9
 celery==5.3.4
 redis==5.0.1
 pydantic==2.5.0
-returns==0.21.0
 gunicorn==21.2.0

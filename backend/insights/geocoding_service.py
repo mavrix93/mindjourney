@@ -5,7 +5,7 @@ AI-powered geocoding service for converting place names to coordinates
 import json
 import re
 from typing import Optional, Tuple, List, Dict, Any
-from returns.result import Result, Success, Failure
+from common.result import Result, Success, Failure
 import google.generativeai as genai
 from django.conf import settings
 

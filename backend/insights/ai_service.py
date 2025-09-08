@@ -4,7 +4,7 @@ import json
 from typing import List, Dict, Any
 from google.api_core.exceptions import GoogleAPIError
 from django.conf import settings
-from returns.result import Result, Success, Failure
+from common.result import Result, Success, Failure
 from pydantic import BaseModel, Field
 
 

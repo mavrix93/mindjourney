@@ -56,7 +56,7 @@ def main() -> None:
 
     # Import after Django is configured
     from insights.ai_service import AIInsightExtractor, InsightData
-    from returns.result import Success, Failure
+    from common.result import Success, Failure
 
     text = load_input_text(args)
 
