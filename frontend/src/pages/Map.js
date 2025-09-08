@@ -16,10 +16,12 @@ L.Icon.Default.mergeOptions({
 });
 
 const Container = styled.div`
-  min-height: calc(100vh - 80px); /* Account for bottom navigation */
-  padding: 20px;
-  padding-top: 60px;
-  padding-bottom: 100px; /* Extra space for bottom navigation */
+  min-height: calc(100vh - 64px);
+  padding: 24px;
+  padding-top: 72px;
+  padding-bottom: 40px;
+  max-width: 1100px;
+  margin: 0 auto;
 `;
 
 const Header = styled.div`
@@ -31,8 +33,9 @@ const Header = styled.div`
 
 const Title = styled.h1`
   font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #e6e6e6;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -45,58 +48,58 @@ const Controls = styled.div`
 `;
 
 const FilterButton = styled(motion.button)`
-  background: rgba(138, 43, 226, 0.2);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 12px;
-  padding: 10px 15px;
-  color: #8a2be2;
+  background: rgba(110, 86, 207, 0.18);
+  border: 1px solid rgba(110, 86, 207, 0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #c6b9ff;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: 0.9rem;
   
   &:hover {
-    background: rgba(138, 43, 226, 0.3);
+    background: rgba(110, 86, 207, 0.24);
   }
 `;
 
 const MapWrapper = styled.div`
-  height: calc(100vh - 200px);
-  border-radius: 16px;
+  height: calc(100vh - 220px);
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  box-shadow: 0 0 20px rgba(138, 43, 226, 0.2);
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  box-shadow: 0 8px 24px rgba(110, 86, 207, 0.18);
 `;
 
 const Legend = styled(motion.div)`
   position: absolute;
   top: 20px;
   right: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 12px;
-  padding: 15px;
+  background: rgba(12, 12, 14, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 10px;
+  padding: 12px;
   z-index: 1000;
 `;
 
 const LegendTitle = styled.h3`
-  color: #ffffff;
+  color: #e6e6e6;
   font-size: 0.9rem;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 `;
 
 const LegendItem = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(230, 230, 230, 0.8);
 `;
 
 const LegendColor = styled.div`
@@ -110,11 +113,11 @@ const StatsPanel = styled(motion.div)`
   position: absolute;
   bottom: 20px;
   left: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 12px;
-  padding: 15px;
+  background: rgba(12, 12, 14, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 10px;
+  padding: 12px;
   z-index: 1000;
 `;
 
@@ -124,7 +127,7 @@ const StatItem = styled.div`
   align-items: center;
   margin-bottom: 8px;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(230, 230, 230, 0.8);
   
   &:last-child {
     margin-bottom: 0;
@@ -132,7 +135,7 @@ const StatItem = styled.div`
 `;
 
 const StatValue = styled.span`
-  color: #8a2be2;
+  color: #c6b9ff;
   font-weight: 600;
 `;
 
