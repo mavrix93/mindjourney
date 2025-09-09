@@ -19,25 +19,27 @@ import styled from 'styled-components';
 import { deleteEntry, getEntry, updateEntry } from '../services/api';
 
 const Container = styled.div`
-  min-height: calc(100vh - 80px); /* Account for bottom navigation */
-  padding: 20px;
-  padding-top: 60px;
-  padding-bottom: 100px; /* Extra space for bottom navigation */
+  min-height: calc(100vh - 64px);
+  padding: 24px;
+  padding-top: 72px;
+  padding-bottom: 40px;
+  max-width: 900px;
+  margin: 0 auto;
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 `;
 
 const BackButton = styled(motion.button)`
-  background: rgba(138, 43, 226, 0.2);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 12px;
-  padding: 10px 15px;
-  color: #8a2be2;
+  background: rgba(110, 86, 207, 0.18);
+  border: 1px solid rgba(110, 86, 207, 0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #c6b9ff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -45,7 +47,7 @@ const BackButton = styled(motion.button)`
   font-size: 0.9rem;
   
   &:hover {
-    background: rgba(138, 43, 226, 0.3);
+    background: rgba(110, 86, 207, 0.24);
   }
 `;
 
@@ -55,11 +57,11 @@ const ActionButtons = styled.div`
 `;
 
 const ActionButton = styled(motion.button)`
-  background: ${props => props.$variant === 'danger' ? 'rgba(244, 67, 54, 0.2)' : 'rgba(138, 43, 226, 0.2)'};
-  border: 1px solid ${props => props.$variant === 'danger' ? 'rgba(244, 67, 54, 0.3)' : 'rgba(138, 43, 226, 0.3)'};
-  border-radius: 12px;
-  padding: 10px 15px;
-  color: ${props => props.$variant === 'danger' ? '#f44336' : '#8a2be2'};
+  background: ${props => props.$variant === 'danger' ? 'rgba(255, 69, 58, 0.18)' : 'rgba(110, 86, 207, 0.18)'};
+  border: 1px solid ${props => props.$variant === 'danger' ? 'rgba(255, 69, 58, 0.3)' : 'rgba(110, 86, 207, 0.3)'};
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: ${props => props.$variant === 'danger' ? '#ff453a' : '#c6b9ff'};
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -67,17 +69,17 @@ const ActionButton = styled(motion.button)`
   font-size: 0.9rem;
   
   &:hover {
-    background: ${props => props.$variant === 'danger' ? 'rgba(244, 67, 54, 0.3)' : 'rgba(138, 43, 226, 0.3)'};
+    background: ${props => props.$variant === 'danger' ? 'rgba(255, 69, 58, 0.24)' : 'rgba(110, 86, 207, 0.24)'};
   }
 `;
 
 const EntryCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 16px;
-  padding: 30px;
-  margin-bottom: 30px;
-  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(8px);
 `;
 
 const EntryMeta = styled.div`
@@ -86,7 +88,7 @@ const EntryMeta = styled.div`
   align-items: center;
   margin-bottom: 20px;
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(230, 230, 230, 0.6);
 `;
 
 const MetaItem = styled.div`
@@ -97,17 +99,18 @@ const MetaItem = styled.div`
 
 const EntryTitle = styled.h1`
   font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 20px;
-  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #e6e6e6;
+  margin-bottom: 16px;
+  line-height: 1.25;
 `;
 
 const EntryContent = styled.div`
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(230, 230, 230, 0.9);
   line-height: 1.7;
-  font-size: 1.1rem;
-  margin-bottom: 30px;
+  font-size: 1.05rem;
+  margin-bottom: 24px;
   white-space: pre-wrap;
 `;
 
@@ -116,10 +119,10 @@ const InsightsSection = styled.div`
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 20px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e6e6e6;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -127,39 +130,38 @@ const SectionTitle = styled.h2`
 
 const InsightsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
 `;
 
 const InsightCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(138, 43, 226, 0.3);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(110, 86, 207, 0.25);
   border-radius: 12px;
-  padding: 20px;
-  backdrop-filter: blur(10px);
+  padding: 16px;
+  backdrop-filter: blur(8px);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(138, 43, 226, 0.5);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(138, 43, 226, 0.2);
+    border-color: rgba(110, 86, 207, 0.45);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 36px rgba(110, 86, 207, 0.25);
   }
 `;
 
 const InsightCategory = styled.div`
   font-size: 0.8rem;
-  color: #8a2be2;
+  color: #c6b9ff;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 `;
 
 const InsightText = styled.p`
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 10px;
+  color: rgba(230, 230, 230, 0.8);
+  margin-bottom: 8px;
   font-style: italic;
 `;
 
@@ -176,19 +178,19 @@ const SentimentBadge = styled.span`
   font-size: 0.7rem;
   font-weight: 500;
   background: ${props => {
-    if (props.sentiment > 0.3) return 'rgba(76, 175, 80, 0.2)';
-    if (props.sentiment < -0.3) return 'rgba(244, 67, 54, 0.2)';
-    return 'rgba(255, 193, 7, 0.2)';
+    if (props.sentiment > 0.3) return 'rgba(52, 199, 89, 0.18)';
+    if (props.sentiment < -0.3) return 'rgba(255, 69, 58, 0.18)';
+    return 'rgba(255, 204, 0, 0.18)';
   }};
   color: ${props => {
-    if (props.sentiment > 0.3) return '#4caf50';
-    if (props.sentiment < -0.3) return '#f44336';
-    return '#ffc107';
+    if (props.sentiment > 0.3) return '#34c759';
+    if (props.sentiment < -0.3) return '#ff453a';
+    return '#ffcc00';
   }};
 `;
 
 const ConfidenceScore = styled.span`
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(230, 230, 230, 0.5);
 `;
 
 const DocumentsSection = styled.div`
@@ -205,10 +207,10 @@ const DocumentItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 8px;
-  padding: 15px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 10px;
+  padding: 14px;
 `;
 
 const DocumentInfo = styled.div`
@@ -218,12 +220,12 @@ const DocumentInfo = styled.div`
 `;
 
 const DocumentName = styled.span`
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(230, 230, 230, 0.85);
   font-size: 0.9rem;
 `;
 
 const DocumentSize = styled.span`
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(230, 230, 230, 0.5);
   font-size: 0.8rem;
 `;
 
@@ -237,7 +239,7 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
   display: block;
-  color: #ffffff;
+  color: #e6e6e6;
   font-weight: 600;
   margin-bottom: 8px;
   font-size: 0.9rem;
@@ -245,32 +247,32 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 12px;
-  padding: 15px;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #e6e6e6;
   font-size: 1rem;
   transition: all 0.3s ease;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(230, 230, 230, 0.5);
   }
   
   &:focus {
     outline: none;
-    border-color: #8a2be2;
-    box-shadow: 0 0 10px rgba(138, 43, 226, 0.3);
+    border-color: #6e56cf;
+    box-shadow: 0 0 0 3px rgba(110, 86, 207, 0.25);
   }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 12px;
-  padding: 15px;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #e6e6e6;
   font-size: 1rem;
   min-height: 200px;
   resize: vertical;
@@ -278,13 +280,13 @@ const TextArea = styled.textarea`
   transition: all 0.3s ease;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(230, 230, 230, 0.5);
   }
   
   &:focus {
     outline: none;
-    border-color: #8a2be2;
-    box-shadow: 0 0 10px rgba(138, 43, 226, 0.3);
+    border-color: #6e56cf;
+    box-shadow: 0 0 0 3px rgba(110, 86, 207, 0.25);
   }
 `;
 
@@ -298,7 +300,7 @@ const CheckboxGroup = styled.div`
 const Checkbox = styled.input`
   width: 18px;
   height: 18px;
-  accent-color: #8a2be2;
+  accent-color: #6e56cf;
 `;
 
 const CheckboxLabel = styled.label`
@@ -412,6 +414,7 @@ const EntryDetail = () => {
                 onClick={handleEdit}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                data-testid="edit-entry-button"
               >
                 <Edit size={16} />
                 Edit
