@@ -185,5 +185,11 @@ export const unsubscribeFace = async (faceId) => {
   return response.data;
 };
 
+// Faces Suggestions
+export const suggestFaces = async ({ title = '', text = '' } = {}) => {
+  const response = await api.get('/faces/suggest/', { params: { title, text } });
+  return response.data;
+};
+
 
 export default api;
