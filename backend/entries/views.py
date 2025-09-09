@@ -108,14 +108,13 @@ class EntryViewSet(viewsets.ModelViewSet):
                 insights__category__name__icontains=category
             ).distinct()
 
-        # Filter by selected faces (comma-separated IDs)
+        # Filter by selected faces (comma-separated IDs). Match ANY (OR), not ALL.
         face_ids = request.query_params.get("face_ids")
         if face_ids:
             try:
                 id_list = [int(fid) for fid in face_ids.split(",") if fid.strip()]
-                for fid in id_list:
-                    queryset = queryset.filter(faces__id=fid)
-                queryset = queryset.distinct()
+                if id_list:
+                    queryset = queryset.filter(faces__id__in=id_list).distinct()
             except ValueError:
                 pass
 
