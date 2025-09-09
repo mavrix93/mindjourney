@@ -134,6 +134,15 @@ async function main() {
   try {
     const page = await browser.newPage();
 
+    // Helper to wait for text to appear on the page body. More reliable than Puppeteer's text/ selectors.
+    async function waitForText(targetText, timeoutMs = 10000) {
+      await page.waitForFunction(
+        (text) => document && document.body && document.body.innerText && document.body.innerText.includes(text),
+        { timeout: timeoutMs },
+        targetText,
+      );
+    }
+
     await page.setRequestInterception(true);
     page.on('request', async (req) => {
       const url = req.url();
@@ -154,6 +163,44 @@ async function main() {
         const found = sampleEntries.find((e) => e.id === id) || sampleEntries[0];
         return req.respond(json(found));
       }
+      // Faces endpoints
+      if (/\/api\/faces\/$/.test(url)) {
+        return req.respond(json([
+          { id: 1, name: 'Alice', icon: '👩' },
+          { id: 2, name: 'Bob', icon: '👨' },
+          { id: 3, name: 'Charlie', icon: '🧑' },
+        ]));
+      }
+      if (/\/api\/faces\/subscribed\/$/.test(url)) {
+        return req.respond(json([
+          { id: 1, name: 'Alice', icon: '👩' },
+          { id: 3, name: 'Charlie', icon: '🧑' },
+        ]));
+      }
+
+      // Insights endpoints used by Map
+      if (/\/api\/insights\/$/.test(url)) {
+        return req.respond(json([
+          {
+            id: 9001,
+            text_snippet: 'Lovely trip to Prague',
+            category: { name: 'Prague', category_type: 'place' },
+            sentiment_score: 0.8,
+            confidence_score: 0.92,
+          },
+          {
+            id: 9002,
+            text_snippet: 'Visited Bratislava as well',
+            category: { name: 'Bratislava', category_type: 'place' },
+            sentiment_score: 0.4,
+            confidence_score: 0.8,
+          },
+        ]));
+      }
+      if (/\/api\/insights\/sentiment_summary\//.test(url)) {
+        return req.respond(json({ positive: 10, neutral: 5, negative: 2 }));
+      }
+
       if (/\/api\//.test(url)) {
         // Default mock for any other API calls
         return req.respond(json({ results: [] }));
@@ -163,18 +210,47 @@ async function main() {
 
     // HOME
     await page.goto(`${ORIGIN}/`, { waitUntil: 'networkidle0' });
-    await page.waitForSelector('text/MindJourney');
+    await waitForText('MindJourney');
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'home.png'), fullPage: true });
 
     // ENTRY DETAIL
     await page.goto(`${ORIGIN}/entry/1`, { waitUntil: 'networkidle0' });
-    await page.waitForSelector('text/AI Insights', { timeout: 5000 }).catch(() => {});
+    await waitForText('AI Insights').catch(() => {});
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'entry_detail.png'), fullPage: true });
 
     // TIMELINE
     await page.goto(`${ORIGIN}/timeline`, { waitUntil: 'networkidle0' });
-    await page.waitForSelector('text/Timeline', { timeout: 5000 }).catch(() => {});
+    await waitForText('Timeline').catch(() => {});
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'timeline.png'), fullPage: true });
+
+    // CREATE ENTRY
+    await page.goto(`${ORIGIN}/create`, { waitUntil: 'networkidle0' });
+    await waitForText('Create New Entry').catch(() => {});
+    await page.type('#content', 'Today I met Alice in Prague and had gelato.');
+    await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'create_entry.png'), fullPage: true });
+
+    // EDIT ENTRY (navigate to entry and click edit)
+    await page.goto(`${ORIGIN}/entry/1`, { waitUntil: 'networkidle0' });
+    await page.waitForSelector('[data-testid="edit-entry-button"]', { timeout: 5000 }).catch(() => {});
+    await page.click('[data-testid="edit-entry-button"]').catch(() => {});
+    await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'edit_entry.png'), fullPage: true });
+
+    // FACES PAGE
+    await page.goto(`${ORIGIN}/faces`, { waitUntil: 'networkidle0' });
+    await waitForText('Your Faces').catch(() => {});
+    // Open add face modal
+    await page.click('[data-testid="open-add-face"]').catch(() => {});
+    await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'faces_add.png'), fullPage: true });
+    // Filter faces
+    await page.click('text=Filter', { timeout: 1000 }).catch(() => {});
+    await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'faces_filter.png'), fullPage: true });
+
+    // MAP PAGE
+    await page.goto(`${ORIGIN}/map`, { waitUntil: 'networkidle0' });
+    await waitForText('Places & Insights').catch(() => {});
+    // Set demo locations and capture
+    await page.click('[data-testid="set-demo-locations"]').catch(() => {});
+    await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'map_locations.png'), fullPage: true });
 
     console.log('Screenshots saved to:', SCREENSHOTS_DIR);
   } finally {

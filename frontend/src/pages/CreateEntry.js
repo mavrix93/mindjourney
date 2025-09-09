@@ -9,30 +9,32 @@ import styled from 'styled-components';
 import { createEntry, uploadDocument } from '../services/api';
 
 const Container = styled.div`
-  min-height: calc(100vh - 80px); /* Account for bottom navigation */
-  padding: 20px;
-  padding-top: 60px;
-  padding-bottom: 100px; /* Extra space for bottom navigation */
+  min-height: calc(100vh - 64px);
+  padding: 24px;
+  padding-top: 72px;
+  padding-bottom: 40px;
+  max-width: 900px;
+  margin: 0 auto;
 `;
 
 const Header = styled.div`
-  text-align: center;
-  margin-bottom: 30px;
+  text-align: left;
+  margin-bottom: 24px;
 `;
 
 const Title = styled.h1`
   font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #e6e6e6;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 `;
 
 const Subtitle = styled.p`
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(230, 230, 230, 0.75);
   font-size: 1rem;
 `;
 
@@ -47,7 +49,7 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
   display: block;
-  color: #ffffff;
+  color: #e6e6e6;
   font-weight: 600;
   margin-bottom: 8px;
   font-size: 0.9rem;
@@ -55,32 +57,32 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 12px;
-  padding: 15px;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #e6e6e6;
   font-size: 1rem;
   transition: all 0.3s ease;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(230, 230, 230, 0.5);
   }
   
   &:focus {
     outline: none;
-    border-color: #8a2be2;
-    box-shadow: 0 0 10px rgba(138, 43, 226, 0.3);
+    border-color: #6e56cf;
+    box-shadow: 0 0 0 3px rgba(110, 86, 207, 0.25);
   }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 12px;
-  padding: 15px;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #e6e6e6;
   font-size: 1rem;
   min-height: 200px;
   resize: vertical;
@@ -88,13 +90,13 @@ const TextArea = styled.textarea`
   transition: all 0.3s ease;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(230, 230, 230, 0.5);
   }
   
   &:focus {
     outline: none;
-    border-color: #8a2be2;
-    box-shadow: 0 0 10px rgba(138, 43, 226, 0.3);
+    border-color: #6e56cf;
+    box-shadow: 0 0 0 3px rgba(110, 86, 207, 0.25);
   }
 `;
 
@@ -108,7 +110,7 @@ const CheckboxGroup = styled.div`
 const Checkbox = styled.input`
   width: 18px;
   height: 18px;
-  accent-color: #8a2be2;
+  accent-color: #6e56cf;
 `;
 
 const CheckboxLabel = styled.label`
@@ -118,37 +120,37 @@ const CheckboxLabel = styled.label`
 `;
 
 const FileUploadArea = styled(motion.div)`
-  border: 2px dashed rgba(138, 43, 226, 0.3);
+  border: 2px dashed rgba(110, 86, 207, 0.35);
   border-radius: 12px;
-  padding: 30px;
+  padding: 24px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: rgba(138, 43, 226, 0.05);
+  background: rgba(110, 86, 207, 0.06);
   
   &:hover {
-    border-color: rgba(138, 43, 226, 0.6);
-    background: rgba(138, 43, 226, 0.1);
+    border-color: rgba(110, 86, 207, 0.55);
+    background: rgba(110, 86, 207, 0.1);
   }
   
   ${props => props.$isDragActive && `
-    border-color: #8a2be2;
-    background: rgba(138, 43, 226, 0.1);
+    border-color: #6e56cf;
+    background: rgba(110, 86, 207, 0.1);
   `}
 `;
 
 const UploadIcon = styled.div`
-  color: #8a2be2;
+  color: #c6b9ff;
   margin-bottom: 10px;
 `;
 
 const UploadText = styled.p`
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(230, 230, 230, 0.85);
   margin-bottom: 5px;
 `;
 
 const UploadSubtext = styled.p`
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(230, 230, 230, 0.5);
   font-size: 0.8rem;
 `;
 
@@ -160,20 +162,20 @@ const FileItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(138, 43, 226, 0.3);
-  border-radius: 8px;
-  padding: 10px 15px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
   margin-bottom: 8px;
 `;
 
 const FileName = styled.span`
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(230, 230, 230, 0.85);
   font-size: 0.9rem;
 `;
 
 const FileSize = styled.span`
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(230, 230, 230, 0.5);
   font-size: 0.8rem;
 `;
 
@@ -185,22 +187,22 @@ const ButtonGroup = styled.div`
 `;
 
 const Button = styled(motion.button)`
-  background: ${props => props.$variant === 'primary' ? '#8a2be2' : 'transparent'};
-  border: 1px solid #8a2be2;
-  border-radius: 12px;
-  padding: 15px 30px;
-  color: ${props => props.$variant === 'primary' ? '#ffffff' : '#8a2be2'};
+  background: ${props => props.$variant === 'primary' ? '#6e56cf' : 'transparent'};
+  border: 1px solid #6e56cf;
+  border-radius: 10px;
+  padding: 12px 24px;
+  color: ${props => props.$variant === 'primary' ? '#ffffff' : '#c6b9ff'};
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   
   &:hover {
-    background: ${props => props.$variant === 'primary' ? '#7b1fa2' : 'rgba(138, 43, 226, 0.1)'};
-    box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+    background: ${props => props.$variant === 'primary' ? '#5a46b0' : 'rgba(110, 86, 207, 0.12)'};
+    box-shadow: 0 0 0 3px rgba(110, 86, 207, 0.25);
   }
   
   &:disabled {

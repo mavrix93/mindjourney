@@ -2,6 +2,40 @@
 
 A beautiful, modern diary application that uses AI to extract insights from your entries, categorize experiences, and analyze sentiment. Built with Django and React, featuring a stunning dark star theme with particle effects.
 
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/home.png" alt="Home" width="800" />
+</p>
+
+<p align="center">
+  <img src="screenshots/entry_detail.png" alt="Entry Detail" width="800" />
+</p>
+
+<p align="center">
+  <img src="screenshots/timeline.png" alt="Timeline" width="800" />
+</p>
+
+<p align="center">
+  <img src="screenshots/create_entry.png" alt="Create Entry" width="800" />
+</p>
+
+<p align="center">
+  <img src="screenshots/edit_entry.png" alt="Edit Entry" width="800" />
+</p>
+
+<p align="center">
+  <img src="screenshots/faces_add.png" alt="Faces - Add" width="800" />
+</p>
+
+<p align="center">
+  <img src="screenshots/faces_filter.png" alt="Faces - Filter" width="800" />
+</p>
+
+<p align="center">
+  <img src="screenshots/map_locations.png" alt="Map - Set Locations" width="800" />
+</p>
+
 ## Features
 
 ### 🎨 Beautiful UI
@@ -148,120 +182,4 @@ npm start
 - `PATCH /api/entries/{id}/` - Update entry
 - `DELETE /api/entries/{id}/` - Delete entry
 - `GET /api/entries/public/` - Get public entries
-- `GET /api/entries/search/` - Search entries
-- `POST /api/entries/{id}/upload_document/` - Upload document
-
-### Insights
-- `GET /api/insights/` - List user insights
-- `GET /api/insights/{id}/` - Get insight details
-- `PATCH /api/insights/{id}/` - Update insight
-- `GET /api/insights/by_category/` - Get insights by category
-- `GET /api/insights/sentiment_summary/` - Get sentiment summary
-- `GET /api/insights/search/` - Search insights
-
-### Categories
-- `GET /api/categories/` - List categories
-- `POST /api/categories/` - Create category
-- `GET /api/categories/{id}/` - Get category details
-- `PATCH /api/categories/{id}/` - Update category
-- `DELETE /api/categories/{id}/` - Delete category
-- `GET /api/categories/by_type/` - Get categories by type
-
-## AI Insights Extraction
-
-The application uses Google's Gemini to automatically extract insights from diary entries. The AI identifies:
-
-- **Places** - Cities, countries, landmarks, venues
-- **Products** - Items, brands, purchases
-- **Movies** - Films, TV shows, entertainment
-- **Meals** - Food, restaurants, dining experiences
-- **People** - Individuals mentioned
-- **Activities** - Events, hobbies, experiences
-- **Emotions** - Feelings and emotional states
-
-Each insight includes:
-- Text snippet from the original entry
-- Category name and type
-- Sentiment score (-1.0 to 1.0)
-- Confidence score (0.0 to 1.0)
-- Position in the original text
-
-## Project Structure
-
-```
-mindjourney/
-├── backend/
-│   ├── mindjourney/          # Django project settings
-│   ├── entries/              # Entry management app
-│   ├── insights/             # AI insights app
-│   ├── categories/           # Category management app
-│   └── manage.py
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/       # Reusable components
-│   │   ├── pages/           # Page components
-│   │   ├── services/        # API services
-│   │   └── App.js
-│   └── package.json
-├── docker-compose.yml
-└── README.md
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Django Import Errors**
-   - Make sure all dependencies are installed: `./install-deps.sh`
-   - Or use Docker: `./start.sh`
-
-2. **Database Connection Issues**
-   - For Docker: Make sure PostgreSQL container is running
-   - For local development: Install PostgreSQL and create database
-
-3. **Gemini API Errors**
-   - Ensure your API key is set in `.env` file
-   - Check that you have sufficient API credits
-
-4. **Frontend Build Issues**
-   - Clear node_modules: `rm -rf frontend/node_modules && npm install`
-   - Check Node.js version (requires 18+)
-
-5. **Celery Worker Issues**
-   - Make sure Redis is running
-   - Check Celery logs for specific errors
-
-### Testing Setup
-```bash
-# Test if everything is configured correctly
-./test-setup.sh
-```
-
-### Test the AI Client (CLI)
-```bash
-# Inline text
-GEMINI_API_KEY=your-key python test_ai.py --text "Walked around London and tried gelato."
-
-# From file
-export GEMINI_API_KEY=your-key
-python test_ai.py --file sample.txt --pretty
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Google for providing the Gemini API
-- The React and Django communities for excellent documentation
-- All the open-source libraries that made this project possible
+- `GET /api/entries/search/`
