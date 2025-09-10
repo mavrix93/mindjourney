@@ -240,9 +240,21 @@ async function main() {
     await waitForText('Your Faces').catch(() => {});
     // Open add face modal
     await page.click('[data-testid="open-add-face"]').catch(() => {});
+    await page.waitForSelector('[data-testid="submit-add-face"]', { timeout: 2000 }).catch(() => {});
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'faces_add.png'), fullPage: true });
-    // Filter faces
-    await page.click('text=Filter', { timeout: 1000 }).catch(() => {});
+    // Close add face modal to avoid overlay in the next screenshot
+    try {
+      const [cancelBtn] = await page.$x("//button[contains(., 'Cancel')]");
+      if (cancelBtn) await cancelBtn.click();
+    } catch {}
+    await page.waitForSelector('[data-testid="submit-add-face"]', { hidden: true, timeout: 2000 }).catch(() => {});
+    // Activate a specific filter chip by face name for determinism
+    try {
+      const [chip] = await page.$x("//button[contains(., 'Alice')]");
+      if (chip) await chip.click();
+    } catch {}
+    // Small delay to allow list to update visually
+    await new Promise(r => setTimeout(r, 300));
     await page.screenshot({ path: path.join(SCREENSHOTS_DIR, 'faces_filter.png'), fullPage: true });
 
     // MAP PAGE
