@@ -61,6 +61,8 @@ class EntryDocument(models.Model):
     file = models.FileField(upload_to="entry_documents/")
     filename = models.CharField(max_length=255)
     file_size = models.PositiveIntegerField()
+    content_type = models.CharField(max_length=100, blank=True)
+    extracted_text = models.TextField(blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

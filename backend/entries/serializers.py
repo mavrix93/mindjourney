@@ -9,8 +9,8 @@ from insights.serializers import InsightSerializer
 class EntryDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = EntryDocument
-        fields = ["id", "file", "filename", "file_size", "uploaded_at"]
-        read_only_fields = ["id", "filename", "file_size", "uploaded_at"]
+        fields = ["id", "file", "filename", "file_size", "content_type", "uploaded_at"]
+        read_only_fields = ["id", "filename", "file_size", "content_type", "uploaded_at"]
 
 
 class EntrySerializer(serializers.ModelSerializer):
