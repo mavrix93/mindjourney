@@ -84,6 +84,11 @@ export const uploadDocument = async (entryId, file) => {
   return response.data;
 };
 
+export const deleteDocument = async (entryId, documentId) => {
+  const response = await api.delete(`/entries/${entryId}/documents/${documentId}/`);
+  return response.data;
+};
+
 // Insights API
 export const getInsights = async () => {
   const response = await api.get('/insights/');

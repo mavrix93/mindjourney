@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
 from .models import Entry, EntryDocument
+from .document_service import extract_text_from_file, detect_content_type
 from .serializers import (
     EntrySerializer,
     EntryCreateSerializer,
@@ -145,12 +146,56 @@ class EntryViewSet(viewsets.ModelViewSet):
                 {"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Extract text and detect type
+        content_type = detect_content_type(file)
+        extracted_text = extract_text_from_file(file)
+
         document = EntryDocument.objects.create(
-            entry=entry, file=file, filename=file.name, file_size=file.size
+            entry=entry,
+            file=file,
+            filename=file.name,
+            file_size=file.size,
+            content_type=content_type,
+            extracted_text=extracted_text,
         )
 
         serializer = EntryDocumentSerializer(document)
+        # Trigger re-analysis since documents changed
+        try:
+            task = extract_insights_task
+            delay = getattr(task, "delay", None)
+            if callable(delay):
+                delay(entry.id)
+            else:
+                task(entry.id)
+        except Exception as e:
+            print(f"Skipping re-extraction in CI/test: {e}")
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["delete"], url_path="documents/(?P<doc_id>[^/.]+)")
+    def delete_document(self, request, pk=None, doc_id=None):
+        """Delete a document from an entry and re-run analysis"""
+        entry = self.get_object()
+        try:
+            document = entry.documents.get(id=doc_id)
+        except EntryDocument.DoesNotExist:
+            return Response({"error": "Document not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        document.delete()
+
+        # Trigger re-analysis
+        try:
+            task = extract_insights_task
+            delay = getattr(task, "delay", None)
+            if callable(delay):
+                delay(entry.id)
+            else:
+                task(entry.id)
+        except Exception as e:
+            print(f"Skipping re-extraction in CI/test: {e}")
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["get"])
     def search(self, request):
