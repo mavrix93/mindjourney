@@ -187,6 +187,10 @@ const RemoveButton = styled(motion.button)`
   color: #ff453a;
   cursor: pointer;
   font-size: 0.8rem;
+  
+  &:hover {
+    background: rgba(255, 69, 58, 0.25);
+  }
 `;
 
 const ButtonGroup = styled.div`
