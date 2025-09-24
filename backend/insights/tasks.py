@@ -24,9 +24,17 @@ def extract_insights_task(entry_id: int) -> bool:
             # Clear existing insights
             Insight.objects.filter(entry=entry).delete()
 
+            # Build full content including any attached documents' extracted text
+            documents_text = "\n\n".join(
+                [doc.extracted_text for doc in entry.documents.all() if doc.extracted_text]
+            )
+            combined_content = entry.content
+            if documents_text:
+                combined_content = f"{entry.content}\n\n[Attached Documents]\n{documents_text}"
+
             # Extract new insights
             extractor = AIInsightExtractor()
-            insights_data = extractor.extract_insights(entry.content)
+            insights_data = extractor.extract_insights(combined_content)
             # Create categories and insights
             created_insights = []
             for insight_data in insights_data:
@@ -55,9 +63,7 @@ def extract_insights_task(entry_id: int) -> bool:
 
             # Try to geocode places mentioned in the entry
             geocoding_service = AIGeocodingService()
-            geocoded_places = geocoding_service.extract_and_geocode_places(
-                entry.content
-            )
+            geocoded_places = geocoding_service.extract_and_geocode_places(combined_content)
 
             if geocoded_places:
                 # Use the first (most confident) place as the main location

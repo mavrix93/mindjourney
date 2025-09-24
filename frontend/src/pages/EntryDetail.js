@@ -16,7 +16,8 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { deleteEntry, getEntry, updateEntry } from '../services/api';
+import { deleteEntry, getEntry, updateEntry, uploadDocument, deleteDocument } from '../services/api';
+import { useDropzone } from 'react-dropzone';
 
 const Container = styled.div`
   min-height: calc(100vh - 64px);
@@ -229,6 +230,17 @@ const DocumentSize = styled.span`
   font-size: 0.8rem;
 `;
 
+const FileUploadArea = styled(motion.div)`
+  border: 2px dashed rgba(110, 86, 207, 0.35);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(110, 86, 207, 0.06);
+  margin-bottom: 12px;
+`;
+
 const EditForm = styled.form`
   margin-bottom: 20px;
 `;
@@ -314,6 +326,7 @@ const EntryDetail = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   
   const {
     register,
@@ -336,6 +349,26 @@ const EntryDetail = () => {
         queryClient.invalidateQueries(['entry', id]);
         queryClient.invalidateQueries('entries');
         setIsEditing(false);
+      },
+    }
+  );
+
+  const uploadMutation = useMutation(
+    ({ entryId, file }) => uploadDocument(entryId, file),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['entry', id]);
+        queryClient.invalidateQueries('entries');
+      },
+    }
+  );
+
+  const deleteDocMutation = useMutation(
+    ({ entryId, docId }) => deleteDocument(entryId, docId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['entry', id]);
+        queryClient.invalidateQueries('entries');
       },
     }
   );
@@ -379,6 +412,27 @@ const EntryDetail = () => {
   const handleInsightClick = (insight) => {
     navigate(`/category/${encodeURIComponent(insight.category.name)}/${insight.category.category_type}`);
   };
+
+  const onDrop = async (acceptedFiles) => {
+    setIsUploading(true);
+    try {
+      for (const file of acceptedFiles) {
+        await uploadMutation.mutateAsync({ entryId: id, file });
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif'],
+      'application/pdf': ['.pdf'],
+      'text/*': ['.txt', '.md'],
+    },
+    maxSize: 10 * 1024 * 1024,
+  });
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading entry</div>;
@@ -559,9 +613,13 @@ const EntryDetail = () => {
         </InsightsSection>
       )}
 
-      {entry.documents && entry.documents.length > 0 && (
-        <DocumentsSection>
-          <SectionTitle>Attached Documents</SectionTitle>
+      <DocumentsSection>
+        <SectionTitle>Attached Documents</SectionTitle>
+        <FileUploadArea {...getRootProps()} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+          <input {...getInputProps()} />
+          {isUploading ? 'Uploading...' : (isDragActive ? 'Drop files here...' : 'Drag & drop files here, or click to select')}
+        </FileUploadArea>
+        {entry.documents && entry.documents.length > 0 && (
           <DocumentList>
             {entry.documents.map((doc) => (
               <DocumentItem key={doc.id}>
@@ -571,19 +629,30 @@ const EntryDetail = () => {
                     {(doc.file_size / 1024 / 1024).toFixed(2)} MB
                   </DocumentSize>
                 </DocumentInfo>
-                <ActionButton
-                  onClick={() => window.open(doc.file, '_blank')}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Download size={16} />
-                  Download
-                </ActionButton>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <ActionButton
+                    onClick={() => window.open(doc.file, '_blank')}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Download size={16} />
+                    Download
+                  </ActionButton>
+                  <ActionButton
+                    $variant="danger"
+                    onClick={() => deleteDocMutation.mutate({ entryId: id, docId: doc.id })}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Trash2 size={16} />
+                    Remove
+                  </ActionButton>
+                </div>
               </DocumentItem>
             ))}
           </DocumentList>
-        </DocumentsSection>
-      )}
+        )}
+      </DocumentsSection>
     </Container>
   );
 };

@@ -2,6 +2,7 @@ import google.generativeai as genai
 import re
 import json
 from typing import List, Dict, Any
+from dataclasses import dataclass
 from google.api_core.exceptions import GoogleAPIError
 from django.conf import settings
 from pydantic import BaseModel, Field

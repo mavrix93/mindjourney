@@ -179,6 +179,20 @@ const FileSize = styled.span`
   font-size: 0.8rem;
 `;
 
+const RemoveButton = styled(motion.button)`
+  background: rgba(255, 69, 58, 0.18);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: #ff453a;
+  cursor: pointer;
+  font-size: 0.8rem;
+  
+  &:hover {
+    background: rgba(255, 69, 58, 0.25);
+  }
+`;
+
 const ButtonGroup = styled.div`
   display: flex;
   gap: 15px;
@@ -363,10 +377,19 @@ const CreateEntry = () => {
             <FileList>
               {uploadedFiles.map((file, index) => (
                 <FileItem key={index}>
-                  <FileName>{file.name}</FileName>
-                  <FileSize>
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </FileSize>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <FileName>{file.name}</FileName>
+                    <FileSize>
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </FileSize>
+                  </div>
+                  <RemoveButton
+                    onClick={() => removeFile(index)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Remove
+                  </RemoveButton>
                 </FileItem>
               ))}
             </FileList>
