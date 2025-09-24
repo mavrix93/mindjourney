@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
-import { Heart, MapPin, Sparkles, Star, TrendingUp } from 'lucide-react';
-import React from 'react';
+import { Bot, Heart, MapPin, Search, Sparkles, Star, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { getEntries, getPublicEntries } from '../services/api';
+import { aiQuery, getEntries, getPublicEntries } from '../services/api';
 
 const Container = styled.div`
   min-height: calc(100vh - 64px);
@@ -177,8 +177,192 @@ const ProcessingBadge = styled.span`
   }
 `;
 
+const AIQuerySection = styled(motion.div)`
+  margin-bottom: 32px;
+`;
+
+const AIQueryCard = styled(motion.div)`
+  background: linear-gradient(135deg, rgba(110, 86, 207, 0.15), rgba(110, 86, 207, 0.05));
+  border: 1px solid rgba(110, 86, 207, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(110, 86, 207, 0.2);
+`;
+
+const AIQueryTitle = styled.h2`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e6e6e6;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const AIQuerySubtitle = styled.p`
+  color: rgba(230, 230, 230, 0.7);
+  margin-bottom: 20px;
+  font-size: 1rem;
+`;
+
+const QueryForm = styled.form`
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+`;
+
+const QueryInput = styled.input`
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(110, 86, 207, 0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #e6e6e6;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(110, 86, 207, 0.6);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(110, 86, 207, 0.1);
+  }
+
+  &::placeholder {
+    color: rgba(230, 230, 230, 0.5);
+  }
+`;
+
+const QueryButton = styled.button`
+  background: linear-gradient(135deg, #6e56cf, #5a4fcf);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(110, 86, 207, 0.3);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(110, 86, 207, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+`;
+
+const QueryResults = styled(motion.div)`
+  margin-top: 20px;
+`;
+
+const ResultsHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+`;
+
+const ResultsCount = styled.span`
+  color: rgba(230, 230, 230, 0.7);
+  font-size: 0.9rem;
+`;
+
+const ClearButton = styled.button`
+  background: none;
+  border: 1px solid rgba(110, 86, 207, 0.3);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: rgba(230, 230, 230, 0.7);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba(110, 86, 207, 0.5);
+    color: #e6e6e6;
+  }
+`;
+
+const AIAnalysis = styled.div`
+  background: rgba(110, 86, 207, 0.1);
+  border: 1px solid rgba(110, 86, 207, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  color: rgba(230, 230, 230, 0.8);
+  line-height: 1.5;
+`;
+
+const AIAnswer = styled.div`
+  background: linear-gradient(135deg, rgba(110, 86, 207, 0.15), rgba(110, 86, 207, 0.05));
+  border: 1px solid rgba(110, 86, 207, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 16px rgba(110, 86, 207, 0.1);
+`;
+
+const AIAnswerHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+`;
+
+const AIAnswerTitle = styled.h3`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e6e6e6;
+  margin: 0;
+`;
+
+const AIAnswerText = styled.div`
+  color: rgba(230, 230, 230, 0.9);
+  line-height: 1.6;
+  font-size: 1rem;
+`;
+
+const AIAnswerIcon = styled.div`
+  color: #c6b9ff;
+  display: flex;
+  align-items: center;
+`;
+
+const LoadingSpinner = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: rgba(230, 230, 230, 0.7);
+  gap: 8px;
+`;
+
+const ErrorMessage = styled.div`
+  background: rgba(255, 69, 58, 0.1);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  color: #ff453a;
+  font-size: 0.9rem;
+`;
+
 const Home = () => {
   const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [isQuerying, setIsQuerying] = useState(false);
+  const [queryResults, setQueryResults] = useState(null);
+  const [queryError, setQueryError] = useState(null);
+
   const { data: entries, isLoading: entriesLoading } = useQuery(
     'entries',
     getEntries,
@@ -198,6 +382,30 @@ const Home = () => {
     getPublicEntries,
     { retry: false }
   );
+
+  const handleAIQuery = async (e) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+
+    setIsQuerying(true);
+    setQueryError(null);
+    setQueryResults(null);
+
+    try {
+      const results = await aiQuery(query.trim());
+      setQueryResults(results);
+    } catch (error) {
+      setQueryError(error.response?.data?.error || 'Failed to process AI query');
+    } finally {
+      setIsQuerying(false);
+    }
+  };
+
+  const clearQuery = () => {
+    setQuery('');
+    setQueryResults(null);
+    setQueryError(null);
+  };
 
   const recentEntries = entries?.slice(0, 3) || [];
   const recentPublicEntries = publicEntries?.slice(0, 2) || [];
@@ -231,6 +439,151 @@ const Home = () => {
           Your AI-powered diary with insights
         </Subtitle>
       </Header>
+
+      <AIQuerySection
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+      >
+        <AIQueryCard
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.7 }}
+        >
+          <AIQueryTitle>
+            <Bot size={24} />
+            Ask AI
+          </AIQueryTitle>
+          <AIQuerySubtitle>
+            Ask questions about your entries and get AI-powered answers with insights
+          </AIQuerySubtitle>
+          
+          <QueryForm onSubmit={handleAIQuery}>
+            <QueryInput
+              type="text"
+              placeholder="e.g., 'What did I do last week?' or 'Tell me about my travel experiences'"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              disabled={isQuerying}
+            />
+            <QueryButton type="submit" disabled={isQuerying || !query.trim()}>
+              {isQuerying ? (
+                <>
+                  <Sparkles size={16} />
+                  Thinking...
+                </>
+              ) : (
+                <>
+                  <Search size={16} />
+                  Ask AI
+                </>
+              )}
+            </QueryButton>
+          </QueryForm>
+
+          {isQuerying && (
+            <LoadingSpinner>
+              <Sparkles size={16} />
+              AI is analyzing your query...
+            </LoadingSpinner>
+          )}
+
+          {queryError && (
+            <ErrorMessage>
+              {queryError}
+            </ErrorMessage>
+          )}
+
+          {queryResults && (
+            <QueryResults
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ResultsHeader>
+                <ResultsCount>
+                  Found {queryResults.results_count} relevant entries
+                </ResultsCount>
+                <ClearButton onClick={clearQuery}>
+                  Clear
+                </ClearButton>
+              </ResultsHeader>
+
+              {queryResults.ai_answer && (
+                <AIAnswer>
+                  <AIAnswerHeader>
+                    <AIAnswerIcon>
+                      <Bot size={20} />
+                    </AIAnswerIcon>
+                    <AIAnswerTitle>AI Answer</AIAnswerTitle>
+                  </AIAnswerHeader>
+                  <AIAnswerText>
+                    {queryResults.ai_answer}
+                  </AIAnswerText>
+                </AIAnswer>
+              )}
+
+              {queryResults.ai_analysis && (
+                <AIAnalysis>
+                  <strong>Search Analysis:</strong> {queryResults.ai_analysis}
+                </AIAnalysis>
+              )}
+
+              {queryResults.entries && queryResults.entries.length > 0 ? (
+                queryResults.entries.map((entry, index) => (
+                  <EntryCard
+                    key={entry.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    whileHover={{ x: 5 }}
+                    onClick={() => navigate(`/entry/${entry.id}`)}
+                  >
+                    <EntryTitle>{entry.title || 'Untitled Entry'}</EntryTitle>
+                    <EntryContent>
+                      {entry.content.length > 100 
+                        ? `${entry.content.substring(0, 100)}...` 
+                        : entry.content
+                      }
+                    </EntryContent>
+                    {entry.insights && entry.insights.length > 0 && (
+                      <EntryInsights>
+                        {entry.insights.slice(0, 3).map((insight) => (
+                          <InsightChip key={insight.id}>
+                            <Sparkles size={12} /> {insight.category.name}
+                          </InsightChip>
+                        ))}
+                        {entry.insights.length > 3 && (
+                          <InsightChip>+{entry.insights.length - 3} more</InsightChip>
+                        )}
+                      </EntryInsights>
+                    )}
+                    <EntryMeta>
+                      <span>{new Date(entry.created_at).toLocaleDateString()}</span>
+                      {!entry.insights_processed ? (
+                        <ProcessingBadge>
+                          <Sparkles size={12} />
+                          Processing...
+                        </ProcessingBadge>
+                      ) : entry.overall_sentiment !== null ? (
+                        <SentimentBadge sentiment={entry.overall_sentiment}>
+                          {entry.overall_sentiment > 0.3 ? 'Positive' : 
+                           entry.overall_sentiment < -0.3 ? 'Negative' : 'Neutral'}
+                        </SentimentBadge>
+                      ) : null}
+                    </EntryMeta>
+                  </EntryCard>
+                ))
+              ) : (
+                <EntryCard>
+                  <EntryTitle>No matching entries found</EntryTitle>
+                  <EntryContent>Try rephrasing your question or ask about something else.</EntryContent>
+                </EntryCard>
+              )}
+            </QueryResults>
+          )}
+        </AIQueryCard>
+      </AIQuerySection>
 
       <StatsGrid
         initial={{ opacity: 0, y: 20 }}

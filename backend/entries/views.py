@@ -74,10 +74,25 @@ class EntryViewSet(viewsets.ModelViewSet):
             if callable(delay):
                 delay(entry.id)
             else:
+                # Fallback to synchronous execution if Celery is not available
                 task(entry.id)
         except Exception as e:
             # Do not fail request if background processing isn't available
-            print(f"Skipping insight extraction in CI/test: {e}")
+            print(f"Skipping insight extraction: {e}")
+            # Try synchronous execution as fallback
+            try:
+                from insights.tasks import extract_insights_sync
+                result = extract_insights_sync(entry.id)
+                if result:
+                    print(f"Successfully processed entry {entry.id} synchronously")
+                else:
+                    print(f"Sync insight extraction failed for entry {entry.id}")
+            except Exception as sync_error:
+                print(f"Sync insight extraction also failed: {sync_error}")
+                # Mark as processed to avoid retry loops
+                entry.insights_processed = True
+                entry.save()
+                
         return entry
 
     def perform_update(self, serializer):
@@ -93,9 +108,23 @@ class EntryViewSet(viewsets.ModelViewSet):
                 if callable(delay):
                     delay(entry.id)
                 else:
+                    # Fallback to synchronous execution if Celery is not available
                     task(entry.id)
             except Exception as e:
-                print(f"Skipping re-extraction in CI/test: {e}")
+                print(f"Skipping re-extraction: {e}")
+                # Try synchronous execution as fallback
+                try:
+                    from insights.tasks import extract_insights_sync
+                    result = extract_insights_sync(entry.id)
+                    if result:
+                        print(f"Successfully re-processed entry {entry.id} synchronously")
+                    else:
+                        print(f"Sync re-extraction failed for entry {entry.id}")
+                except Exception as sync_error:
+                    print(f"Sync re-extraction also failed: {sync_error}")
+                    # Mark as processed to avoid retry loops
+                    entry.insights_processed = True
+                    entry.save()
 
     @action(detail=False, methods=["get"])
     def public(self, request):
@@ -177,9 +206,23 @@ class EntryViewSet(viewsets.ModelViewSet):
             if callable(delay):
                 delay(entry.id)
             else:
+                # Fallback to synchronous execution if Celery is not available
                 task(entry.id)
         except Exception as e:
-            print(f"Skipping re-extraction in CI/test: {e}")
+            print(f"Skipping re-extraction: {e}")
+            # Try synchronous execution as fallback
+            try:
+                from insights.tasks import extract_insights_sync
+                result = extract_insights_sync(entry.id)
+                if result:
+                    print(f"Successfully re-processed entry {entry.id} synchronously")
+                else:
+                    print(f"Sync re-extraction failed for entry {entry.id}")
+            except Exception as sync_error:
+                print(f"Sync re-extraction also failed: {sync_error}")
+                # Mark as processed to avoid retry loops
+                entry.insights_processed = True
+                entry.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -201,9 +244,23 @@ class EntryViewSet(viewsets.ModelViewSet):
             if callable(delay):
                 delay(entry.id)
             else:
+                # Fallback to synchronous execution if Celery is not available
                 task(entry.id)
         except Exception as e:
-            print(f"Skipping re-extraction in CI/test: {e}")
+            print(f"Skipping re-extraction: {e}")
+            # Try synchronous execution as fallback
+            try:
+                from insights.tasks import extract_insights_sync
+                result = extract_insights_sync(entry.id)
+                if result:
+                    print(f"Successfully re-processed entry {entry.id} synchronously")
+                else:
+                    print(f"Sync re-extraction failed for entry {entry.id}")
+            except Exception as sync_error:
+                print(f"Sync re-extraction also failed: {sync_error}")
+                # Mark as processed to avoid retry loops
+                entry.insights_processed = True
+                entry.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -295,15 +352,34 @@ class EntryViewSet(viewsets.ModelViewSet):
             delay = getattr(task, "delay", None)
             if callable(delay):
                 delay(entry.id)
+                return Response(
+                    {"message": "Reprocessing started", "entry_id": entry.id},
+                    status=status.HTTP_200_OK
+                )
             else:
+                # Fallback to synchronous execution if Celery is not available
                 task(entry.id)
-            
-            return Response(
-                {"message": "Reprocessing started", "entry_id": entry.id},
-                status=status.HTTP_200_OK
-            )
+                return Response(
+                    {"message": "Reprocessing completed synchronously", "entry_id": entry.id},
+                    status=status.HTTP_200_OK
+                )
         except Exception as e:
-            return Response(
-                {"error": f"Failed to start reprocessing: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            # Try synchronous execution as fallback
+            try:
+                from insights.tasks import extract_insights_sync
+                result = extract_insights_sync(entry.id)
+                if result:
+                    return Response(
+                        {"message": "Reprocessing completed synchronously", "entry_id": entry.id},
+                        status=status.HTTP_200_OK
+                    )
+                else:
+                    return Response(
+                        {"error": "Synchronous reprocessing failed"},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+            except Exception as sync_error:
+                return Response(
+                    {"error": f"Failed to reprocess: {str(sync_error)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )

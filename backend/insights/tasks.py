@@ -99,6 +99,100 @@ def extract_insights_task(self, entry_id: int) -> bool:
         raise
 
 
+def extract_insights_sync(entry_id: int) -> bool:
+    """Synchronous version of insight extraction for when Celery is not available"""
+    logger.info(f"Starting synchronous insight extraction for entry {entry_id}")
+    
+    try:
+        with transaction.atomic():
+            entry = Entry.objects.get(id=entry_id)
+
+            # Clear existing insights
+            Insight.objects.filter(entry=entry).delete()
+
+            # Build full content including any attached documents' extracted text
+            documents_text = "\n\n".join(
+                [doc.extracted_text for doc in entry.documents.all() if doc.extracted_text]
+            )
+            combined_content = entry.content
+            if documents_text:
+                combined_content = f"{entry.content}\n\n[Attached Documents]\n{documents_text}"
+
+            # Extract new insights
+            try:
+                extractor = AIInsightExtractor()
+                insights_data = extractor.extract_insights(combined_content)
+            except Exception as ai_error:
+                logger.warning(f"AI insight extraction failed for entry {entry_id}: {ai_error}")
+                # Mark as processed even if AI fails to avoid retry loops
+                entry.insights_processed = True
+                entry.save()
+                return False
+            
+            # Create categories and insights
+            created_insights = []
+            for insight_data in insights_data:
+                category, created = Category.objects.get_or_create(
+                    name=insight_data.category_name,
+                    defaults={"category_type": insight_data.category_type},
+                )
+
+                insight = Insight.objects.create(
+                    entry=entry,
+                    category=category,
+                    text_snippet=insight_data.text_snippet,
+                    sentiment_score=insight_data.sentiment_score,
+                    confidence_score=insight_data.confidence_score,
+                    start_position=insight_data.start_position,
+                    end_position=insight_data.end_position,
+                )
+                created_insights.append(insight)
+
+            # Update overall sentiment and mark as processed
+            overall_sentiment = extractor.calculate_overall_sentiment(
+                insights_data
+            )
+            entry.overall_sentiment = overall_sentiment
+            entry.insights_processed = True
+
+            # Try to geocode places mentioned in the entry
+            try:
+                geocoding_service = AIGeocodingService()
+                geocoded_places = geocoding_service.extract_and_geocode_places(combined_content)
+
+                if geocoded_places:
+                    # Use the first (most confident) place as the main location
+                    main_place = geocoded_places[0]
+                    entry.latitude = main_place["latitude"]
+                    entry.longitude = main_place["longitude"]
+                    entry.location_name = main_place["full_name"]
+                    logger.info(
+                        f"Geocoded entry {entry_id} to {main_place['full_name']} at {main_place['latitude']}, {main_place['longitude']}"
+                    )
+                else:
+                    logger.info(f"No places found to geocode for entry {entry_id}")
+            except Exception as geocoding_error:
+                logger.warning(f"Geocoding failed for entry {entry_id}: {geocoding_error}")
+
+            entry.save()
+            logger.info(f"Successfully processed entry {entry_id} synchronously")
+            return True
+
+    except Entry.DoesNotExist:
+        logger.error(f"Entry with id {entry_id} not found")
+        return False
+    except Exception as e:
+        logger.error(f"Error processing entry {entry_id} synchronously: {str(e)}")
+        # Mark as processed to avoid retry loops even if processing failed
+        try:
+            entry = Entry.objects.get(id=entry_id)
+            entry.insights_processed = True
+            entry.save()
+        except:
+            pass
+        return False
+
+
 @shared_task(bind=True)
 def retry_unprocessed_entries(self):
     """Find and retry processing for entries that haven't been processed yet"""

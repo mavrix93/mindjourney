@@ -154,6 +154,13 @@ export const geocodePlace = async (placeName, context = '') => {
   return response.data;
 };
 
+export const aiQuery = async (query) => {
+  const response = await api.post('/insights/ai_query/', {
+    query: query
+  });
+  return response.data;
+};
+
 // Categories API
 export const getCategories = async () => {
   const response = await api.get('/categories/');
