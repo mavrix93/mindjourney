@@ -1,23 +1,25 @@
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
-  Calendar,
-  Download,
-  Edit,
-  Eye,
-  EyeOff,
-  Save,
-  Sparkles,
-  Trash2,
-  X
+    ArrowLeft,
+    Calendar,
+    Download,
+    Edit,
+    Eye,
+    EyeOff,
+    RefreshCw,
+    Save,
+    Sparkles,
+    Trash2,
+    User,
+    X
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { deleteEntry, getEntry, updateEntry, uploadDocument, deleteDocument } from '../services/api';
-import { useDropzone } from 'react-dropzone';
+import { deleteDocument, deleteEntry, getEntry, getFaces, reprocessEntry, updateEntry, uploadDocument } from '../services/api';
 
 const Container = styled.div`
   min-height: calc(100vh - 64px);
@@ -321,12 +323,116 @@ const CheckboxLabel = styled.label`
   cursor: pointer;
 `;
 
+const FaceSelectionSection = styled.div`
+  margin-bottom: 20px;
+`;
+
+const FaceGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+`;
+
+const FaceCard = styled.button`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: ${props => props.$selected ? 'rgba(110, 86, 207, 0.18)' : 'linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03))'};
+  border: 1px solid ${props => props.$selected ? 'rgba(110, 86, 207, 0.5)' : 'rgba(110, 86, 207, 0.25)'};
+  border-radius: 8px;
+  padding: 8px 6px;
+  color: #e6e6e6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: rgba(110, 86, 207, 0.5);
+    background: rgba(110, 86, 207, 0.1);
+  }
+`;
+
+const FaceIcon = styled.div`
+  font-size: 16px;
+  margin-bottom: 4px;
+`;
+
+const FaceName = styled.div`
+  font-size: 10px;
+  text-align: center;
+  font-weight: 500;
+`;
+
+const FaceDisplaySection = styled.div`
+  margin-bottom: 20px;
+`;
+
+const FaceDisplayGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+`;
+
+const FaceDisplayCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(110, 86, 207, 0.12);
+  border: 1px solid rgba(110, 86, 207, 0.3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #c6b9ff;
+  font-size: 0.85rem;
+`;
+
+const ProcessingStatus = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: ${props => props.$processed ? 'rgba(52, 199, 89, 0.12)' : 'rgba(255, 204, 0, 0.12)'};
+  border: 1px solid ${props => props.$processed ? 'rgba(52, 199, 89, 0.3)' : 'rgba(255, 204, 0, 0.3)'};
+  border-radius: 10px;
+  color: ${props => props.$processed ? '#34c759' : '#ffcc00'};
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  box-shadow: ${props => !props.$processed ? '0 0 20px rgba(255, 204, 0, 0.1)' : 'none'};
+  animation: ${props => !props.$processed ? 'pulse 2s infinite' : 'none'};
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+`;
+
+const RefreshIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 8px;
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .spinner {
+    animation: spin 1s linear infinite;
+  }
+`;
+
 const EntryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFaces, setSelectedFaces] = useState([]);
   
   const {
     register,
@@ -336,11 +442,21 @@ const EntryDetail = () => {
     reset,
   } = useForm();
 
-  const { data: entry, isLoading, error } = useQuery(
+  const { data: entry, isLoading, error, refetch } = useQuery(
     ['entry', id],
     () => getEntry(id),
-    { retry: false }
+    { 
+      retry: false,
+      refetchInterval: (data) => {
+        // Auto-refresh every 3 seconds if processing is not complete
+        return data?.insights_processed === false ? 3000 : false;
+      },
+      refetchIntervalInBackground: true,
+    }
   );
+
+  // Fetch available faces
+  const { data: faces = [] } = useQuery(['faces'], getFaces);
 
   const updateEntryMutation = useMutation(
     (data) => updateEntry(id, data),
@@ -383,6 +499,16 @@ const EntryDetail = () => {
     }
   );
 
+  const reprocessMutation = useMutation(
+    () => reprocessEntry(id),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['entry', id]);
+        queryClient.invalidateQueries('entries');
+      },
+    }
+  );
+
   const isPublic = watch('is_public', entry?.is_public || false);
 
   const handleEdit = () => {
@@ -391,16 +517,30 @@ const EntryDetail = () => {
       content: entry.content || '',
       is_public: entry.is_public || false,
     });
+    setSelectedFaces(entry.faces ? entry.faces.map(f => f.id) : []);
     setIsEditing(true);
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
     reset();
+    setSelectedFaces([]);
+  };
+
+  const toggleFaceSelection = (faceId) => {
+    setSelectedFaces(prev => 
+      prev.includes(faceId) 
+        ? prev.filter(id => id !== faceId)
+        : [...prev, faceId]
+    );
   };
 
   const onSubmit = (data) => {
-    updateEntryMutation.mutate(data);
+    const updateData = {
+      ...data,
+      face_ids: selectedFaces,
+    };
+    updateEntryMutation.mutate(updateData);
   };
 
   const handleDelete = () => {
@@ -434,7 +574,24 @@ const EntryDetail = () => {
     maxSize: 10 * 1024 * 1024,
   });
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <Container>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#e6e6e6' }}>
+          <Sparkles size={32} style={{ marginBottom: '16px', opacity: 0.7 }} />
+          <div>Loading entry...</div>
+          <ProcessingStatus $processed={false} style={{ marginTop: '20px', maxWidth: '400px', margin: '20px auto 0' }}>
+            <Sparkles size={18} />
+            AI Processing in Progress...
+            <RefreshIndicator>
+              <Sparkles size={14} className="spinner" />
+              Auto-refreshing...
+            </RefreshIndicator>
+          </ProcessingStatus>
+        </div>
+      </Container>
+    );
+  }
   if (error) return <div>Error loading entry</div>;
   if (!entry) return <div>Entry not found</div>;
 
@@ -550,6 +707,24 @@ const EntryDetail = () => {
               </CheckboxLabel>
             </CheckboxGroup>
 
+            <FaceSelectionSection>
+              <Label>Select Faces</Label>
+              <FaceGrid>
+                {faces.map(face => (
+                  <FaceCard
+                    key={face.id}
+                    $selected={selectedFaces.includes(face.id)}
+                    onClick={() => toggleFaceSelection(face.id)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <FaceIcon>{face.icon || '🙂'}</FaceIcon>
+                    <FaceName>{face.name}</FaceName>
+                  </FaceCard>
+                ))}
+              </FaceGrid>
+            </FaceSelectionSection>
+
             <ActionButton
               type="submit"
               disabled={updateEntryMutation.isLoading}
@@ -578,6 +753,79 @@ const EntryDetail = () => {
           </>
         )}
       </EntryCard>
+
+      {/* Processing Status - More Prominent */}
+      <ProcessingStatus $processed={entry.insights_processed} style={{ 
+        marginBottom: '30px',
+        fontSize: '0.9rem',
+        fontWeight: '600',
+        textAlign: 'center',
+        maxWidth: '400px',
+        margin: '0 auto 30px'
+      }}>
+        <Sparkles size={18} />
+        {entry.insights_processed ? 'AI Processing Complete' : 'AI Processing in Progress...'}
+        {!entry.insights_processed && (
+          <RefreshIndicator>
+            <Sparkles size={14} className="spinner" />
+            Auto-refreshing...
+            <ActionButton
+              onClick={() => refetch()}
+              style={{ 
+                marginLeft: '10px', 
+                padding: '4px 8px', 
+                fontSize: '0.7rem',
+                background: 'rgba(110, 86, 207, 0.1)',
+                border: '1px solid rgba(110, 86, 207, 0.3)',
+                color: '#c6b9ff'
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <RefreshCw size={12} />
+              Refresh Now
+            </ActionButton>
+          </RefreshIndicator>
+        )}
+        {entry.insights_processed && (
+          <RefreshIndicator style={{ marginTop: '8px' }}>
+            <ActionButton
+              onClick={() => reprocessMutation.mutate()}
+              disabled={reprocessMutation.isLoading}
+              style={{ 
+                padding: '6px 12px', 
+                fontSize: '0.8rem',
+                background: 'rgba(110, 86, 207, 0.15)',
+                border: '1px solid rgba(110, 86, 207, 0.4)',
+                color: '#c6b9ff'
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <RefreshCw size={14} />
+              {reprocessMutation.isLoading ? 'Reprocessing...' : 'Reprocess AI Analysis'}
+            </ActionButton>
+          </RefreshIndicator>
+        )}
+      </ProcessingStatus>
+
+      {/* Face Display */}
+      {entry.faces && entry.faces.length > 0 && (
+        <FaceDisplaySection>
+          <SectionTitle>
+            <User size={20} />
+            Associated Faces
+          </SectionTitle>
+          <FaceDisplayGrid>
+            {entry.faces.map(face => (
+              <FaceDisplayCard key={face.id}>
+                <span>{face.icon || '🙂'}</span>
+                <span>{face.name}</span>
+              </FaceDisplayCard>
+            ))}
+          </FaceDisplayGrid>
+        </FaceDisplaySection>
+      )}
 
       {entry.insights && entry.insights.length > 0 && (
         <InsightsSection>

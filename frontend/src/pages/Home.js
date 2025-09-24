@@ -159,12 +159,38 @@ const SentimentBadge = styled.span`
   }};
 `;
 
+const ProcessingBadge = styled.span`
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: rgba(255, 204, 0, 0.18);
+  color: #ffcc00;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: pulse 2s infinite;
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+`;
+
 const Home = () => {
   const navigate = useNavigate();
   const { data: entries, isLoading: entriesLoading } = useQuery(
     'entries',
     getEntries,
-    { retry: false }
+    { 
+      retry: false,
+      refetchInterval: (data) => {
+        // Auto-refresh every 5 seconds if any entry is still processing
+        const hasUnprocessedEntries = data?.some(entry => entry.insights_processed === false);
+        return hasUnprocessedEntries ? 5000 : false;
+      },
+      refetchIntervalInBackground: true,
+    }
   );
 
   const { data: publicEntries, isLoading: publicLoading } = useQuery(
@@ -271,12 +297,17 @@ const Home = () => {
               )}
               <EntryMeta>
                 <span>{new Date(entry.created_at).toLocaleDateString()}</span>
-                {entry.overall_sentiment !== null && (
+                {!entry.insights_processed ? (
+                  <ProcessingBadge>
+                    <Sparkles size={12} />
+                    Processing...
+                  </ProcessingBadge>
+                ) : entry.overall_sentiment !== null ? (
                   <SentimentBadge sentiment={entry.overall_sentiment}>
                     {entry.overall_sentiment > 0.3 ? 'Positive' : 
                      entry.overall_sentiment < -0.3 ? 'Negative' : 'Neutral'}
                   </SentimentBadge>
-                )}
+                ) : null}
               </EntryMeta>
             </EntryCard>
           ))
@@ -329,12 +360,17 @@ const Home = () => {
               )}
               <EntryMeta>
                 <span>by {entry.user} • {new Date(entry.created_at).toLocaleDateString()}</span>
-                {entry.overall_sentiment !== null && (
+                {!entry.insights_processed ? (
+                  <ProcessingBadge>
+                    <Sparkles size={12} />
+                    Processing...
+                  </ProcessingBadge>
+                ) : entry.overall_sentiment !== null ? (
                   <SentimentBadge sentiment={entry.overall_sentiment}>
                     {entry.overall_sentiment > 0.3 ? 'Positive' : 
                      entry.overall_sentiment < -0.3 ? 'Negative' : 'Neutral'}
                   </SentimentBadge>
-                )}
+                ) : null}
               </EntryMeta>
             </EntryCard>
           ))}

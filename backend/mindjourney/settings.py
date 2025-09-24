@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "django_celery_beat",
     "faces",
     "entries",
     "insights",
@@ -134,6 +135,34 @@ try:
 
     CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
     CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
+    
+    # Task retry configuration
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_RESULT_SERIALIZER = 'json'
+    CELERY_TIMEZONE = TIME_ZONE
+    CELERY_ENABLE_UTC = True
+    
+    # Task retry settings
+    CELERY_TASK_DEFAULT_RETRY_DELAY = 60  # 1 minute
+    CELERY_TASK_MAX_RETRIES = 5
+    CELERY_TASK_RETRY_JITTER = True  # Add randomness to retry delays
+    
+    # Task result settings for persistence
+    CELERY_RESULT_EXPIRES = 3600  # Results expire after 1 hour
+    CELERY_TASK_RESULT_EXPIRES = 3600
+    
+    # Task routing and execution
+    CELERY_TASK_ALWAYS_EAGER = False
+    CELERY_TASK_EAGER_PROPAGATES = True
+    
+    # Worker settings
+    CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+    CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
+    
+    # Beat scheduler for periodic tasks
+    CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+    
 except ImportError:
     # Celery not installed, skip configuration
     pass

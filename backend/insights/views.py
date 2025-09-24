@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Avg, Count
 from .models import Insight
 from .serializers import InsightSerializer
+from .geocoding_service import AIGeocodingService
 from categories.models import Category
 
 
@@ -92,3 +93,38 @@ class InsightViewSet(viewsets.ModelViewSet):
 
         serializer = EntrySerializer(list(entries), many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["post"])
+    def geocode_place(self, request):
+        """Geocode a place name to get coordinates"""
+        place_name = request.data.get("place_name")
+        context = request.data.get("context", "")
+        
+        if not place_name:
+            return Response(
+                {"error": "place_name is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        try:
+            geocoding_service = AIGeocodingService()
+            result = geocoding_service.geocode_place(place_name, context)
+            
+            if result:
+                latitude, longitude, full_name = result
+                return Response({
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "full_name": full_name,
+                    "place_name": place_name
+                })
+            else:
+                return Response(
+                    {"error": "Could not geocode the place"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        except Exception as e:
+            return Response(
+                {"error": f"Geocoding failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

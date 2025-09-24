@@ -31,9 +31,69 @@ def load_input_text(args: argparse.Namespace) -> str:
     raise SystemExit("No input provided. Use --text, --file, or pipe content via stdin.")
 
 
+def test_geocoding(place_name: str, pretty: bool = False) -> None:
+    """Test geocoding a specific place"""
+    from insights.geocoding_service import AIGeocodingService
+    geocoding_service = AIGeocodingService()
+    try:
+        # Debug: Check if model is available
+        if not geocoding_service.model:
+            error_result = {
+                "error": "Gemini API not configured - check GEMINI_API_KEY setting",
+                "place_name": place_name
+            }
+            if pretty:
+                print(json.dumps(error_result, indent=2, ensure_ascii=False))
+            else:
+                print(json.dumps(error_result, ensure_ascii=False))
+            return
+            
+        lat, lng, full_name = geocoding_service.geocode_place(place_name)
+        result = {
+            "place_name": place_name,
+            "full_name": full_name,
+            "latitude": lat,
+            "longitude": lng
+        }
+        if pretty:
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+        else:
+            print(json.dumps(result, ensure_ascii=False))
+    except Exception as e:
+        error_result = {
+            "error": str(e),
+            "place_name": place_name
+        }
+        if pretty:
+            print(json.dumps(error_result, indent=2, ensure_ascii=False))
+        else:
+            print(json.dumps(error_result, ensure_ascii=False))
+
+
+def test_extract_places(content: str, pretty: bool = False) -> None:
+    """Test extracting and geocoding places from content"""
+    from insights.geocoding_service import AIGeocodingService
+    geocoding_service = AIGeocodingService()
+    try:
+        places = geocoding_service.extract_and_geocode_places(content)
+        if pretty:
+            print(json.dumps(places, indent=2, ensure_ascii=False))
+        else:
+            print(json.dumps(places, ensure_ascii=False))
+    except Exception as e:
+        error_result = {
+            "error": str(e),
+            "content_length": len(content)
+        }
+        if pretty:
+            print(json.dumps(error_result, indent=2, ensure_ascii=False))
+        else:
+            print(json.dumps(error_result, ensure_ascii=False))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Test the Gemini AI client for extracting insights."
+        description="Test the Gemini AI client for extracting insights and geocoding."
     )
     parser.add_argument(
         "--text",
@@ -50,6 +110,16 @@ def main() -> None:
         action="store_true",
         help="Pretty-print JSON output.",
     )
+    parser.add_argument(
+        "--geocode",
+        type=str,
+        help="Geocode a specific place name.",
+    )
+    parser.add_argument(
+        "--extract-places",
+        action="store_true",
+        help="Extract and geocode places from the input text.",
+    )
     args = parser.parse_args()
 
     setup_django()
@@ -57,6 +127,17 @@ def main() -> None:
     # Import after Django is configured
     from insights.ai_service import AIInsightExtractor, InsightData
 
+    # Handle geocoding commands
+    if args.geocode:
+        test_geocoding(args.geocode, args.pretty)
+        sys.exit(0)
+    
+    if args.extract_places:
+        text = load_input_text(args)
+        test_extract_places(text, args.pretty)
+        sys.exit(0)
+
+    # Default: extract insights
     text = load_input_text(args)
 
     extractor = AIInsightExtractor()

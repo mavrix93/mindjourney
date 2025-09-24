@@ -72,6 +72,16 @@ export const searchEntries = async (query) => {
   return response.data.results || response.data;
 };
 
+export const getEntriesByFace = async (faceId) => {
+  const response = await api.get(`/entries/by_face/${faceId}/`);
+  return response.data.results || response.data;
+};
+
+export const getEntriesByCategory = async (categoryId) => {
+  const response = await api.get(`/entries/by_category/${categoryId}/`);
+  return response.data.results || response.data;
+};
+
 export const uploadDocument = async (entryId, file) => {
   const formData = new FormData();
   formData.append('file', file);
@@ -86,6 +96,11 @@ export const uploadDocument = async (entryId, file) => {
 
 export const deleteDocument = async (entryId, documentId) => {
   const response = await api.delete(`/entries/${entryId}/documents/${documentId}/`);
+  return response.data;
+};
+
+export const reprocessEntry = async (entryId) => {
+  const response = await api.post(`/entries/${entryId}/reprocess/`);
   return response.data;
 };
 
@@ -117,7 +132,7 @@ export const getSentimentSummary = async () => {
   return response.data;
 };
 
-export const getEntriesByCategory = async (categoryName, categoryType = null) => {
+export const getEntriesByCategoryName = async (categoryName, categoryType = null) => {
   const params = { category_name: categoryName };
   if (categoryType) {
     params.category_type = categoryType;
@@ -128,6 +143,14 @@ export const getEntriesByCategory = async (categoryName, categoryType = null) =>
 
 export const searchInsights = async (query) => {
   const response = await api.get('/insights/search/', { params: { q: query } });
+  return response.data;
+};
+
+export const geocodePlace = async (placeName, context = '') => {
+  const response = await api.post('/insights/geocode_place/', {
+    place_name: placeName,
+    context: context
+  });
   return response.data;
 };
 
@@ -177,6 +200,11 @@ export const getSubscribedFaces = async () => {
 
 export const createFace = async (faceData) => {
   const response = await api.post('/faces/', faceData);
+  return response.data;
+};
+
+export const updateFace = async (id, faceData) => {
+  const response = await api.patch(`/faces/${id}/`, faceData);
   return response.data;
 };
 

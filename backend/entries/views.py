@@ -56,8 +56,8 @@ class EntryViewSet(viewsets.ModelViewSet):
 
                 extractor = AIInsightExtractor()
                 title_result = extractor.generate_title(data["content"])
-                if title_result.is_successful():
-                    data["title"] = title_result.value
+                if title_result:
+                    data["title"] = title_result
             except Exception as e:
                 print(f"Failed to generate title: {e}")
                 # Use first few words as fallback
@@ -108,6 +108,16 @@ class EntryViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(
                 insights__category__name__icontains=category
             ).distinct()
+
+        # Filter by category IDs (comma-separated IDs). Match ANY (OR), not ALL.
+        category_ids = request.query_params.get("category_ids")
+        if category_ids:
+            try:
+                id_list = [int(cid) for cid in category_ids.split(",") if cid.strip()]
+                if id_list:
+                    queryset = queryset.filter(insights__category__id__in=id_list).distinct()
+            except ValueError:
+                pass
 
         # Filter by selected faces (comma-separated IDs). Match ANY (OR), not ALL.
         face_ids = request.query_params.get("face_ids")
@@ -218,3 +228,82 @@ class EntryViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="by_face/(?P<face_id>[^/.]+)")
+    def by_face(self, request, face_id):
+        """Get entries associated with a specific face"""
+        try:
+            face_id = int(face_id)
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "Invalid face ID"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queryset = self.get_queryset().filter(faces__id=face_id).distinct()
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="by_category/(?P<category_identifier>[^/.]+)")
+    def by_category(self, request, category_identifier):
+        """Get entries associated with a specific category by ID or name"""
+        from categories.models import Category
+        
+        # Try to parse as integer first (category ID)
+        try:
+            category_id = int(category_identifier)
+            queryset = self.get_queryset().filter(insights__category__id=category_id).distinct()
+        except (ValueError, TypeError):
+            # If not an integer, treat as category name
+            try:
+                # URL decode the category name in case it contains spaces or special characters
+                import urllib.parse
+                category_name = urllib.parse.unquote(category_identifier)
+                queryset = self.get_queryset().filter(insights__category__name__iexact=category_name).distinct()
+            except Exception:
+                return Response(
+                    {"error": "Invalid category identifier"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"])
+    def reprocess(self, request, pk=None):
+        """Manually trigger insight extraction for an entry"""
+        entry = self.get_object()
+        
+        # Reset processing status
+        entry.insights_processed = False
+        entry.save()
+        
+        # Trigger insight extraction
+        try:
+            task = extract_insights_task
+            delay = getattr(task, "delay", None)
+            if callable(delay):
+                delay(entry.id)
+            else:
+                task(entry.id)
+            
+            return Response(
+                {"message": "Reprocessing started", "entry_id": entry.id},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to start reprocessing: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

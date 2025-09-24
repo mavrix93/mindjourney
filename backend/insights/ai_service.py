@@ -39,7 +39,7 @@ class AIInsightExtractor:
         # Configure Gemini client
         genai.configure(api_key=settings.GEMINI_API_KEY)
         # Use a strong default model; can be overridden later if needed
-        self.model = genai.GenerativeModel("gemini-1.5-pro")
+        self.model = genai.GenerativeModel("gemini-1.5-flash")
 
     def extract_insights(self, content: str) -> List[InsightData]:
         """Extract insights from diary entry content"""

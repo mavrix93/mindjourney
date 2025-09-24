@@ -8,7 +8,7 @@ from typing import Optional, Tuple, List, Dict, Any
 import google.generativeai as genai
 from django.conf import settings
 
-
+import logging
 class AIGeocodingService:
     """AI service for geocoding place names to coordinates"""
 
@@ -20,14 +20,14 @@ class AIGeocodingService:
                 return
 
             genai.configure(api_key=settings.GEMINI_API_KEY)
-            self.model = genai.GenerativeModel("gemini-pro")
+            self.model = genai.GenerativeModel("gemini-1.5-flash")
         except Exception as e:
             print(f"Failed to initialize Gemini AI for geocoding: {e}")
             self.model = None
 
     def geocode_place(
         self, place_name: str, context: str = ""
-    ) -> Tuple[float, float, str]:
+    ) -> Tuple[float, float, str] | None:
         """
         Convert a place name to latitude/longitude coordinates using AI
 
@@ -38,12 +38,13 @@ class AIGeocodingService:
         Returns:
             Result containing (latitude, longitude, full_place_name) or error message
         """
+        logger = logging.getLogger(__name__)
         if not self.model:
             raise RuntimeError("Gemini API not configured for geocoding")
 
         prompt = self._build_geocoding_prompt(place_name, context)
         response = self.model.generate_content(prompt)
-        result_text = getattr(response, "text", "").strip()
+        result_text = getattr(response, "text", "") .strip().replace("```json", "").replace("```", "")
 
         if not result_text:
             raise ValueError("Empty response from Gemini API")
@@ -61,20 +62,23 @@ class AIGeocodingService:
             confidence = result_data.get("confidence", 0.0)
 
             if latitude is None or longitude is None:
-                raise ValueError("Missing coordinates in AI response")
+                logger.error("Missing coordinates in AI response. Response: %s", result_text)
+                return None
 
             # Validate coordinates
             if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-                raise ValueError("Invalid coordinate values")
+                logger.error("Invalid coordinate values. Response: %s", result_text)
+                return None
 
             # Only return results with reasonable confidence
             if confidence < 0.3:
-                raise ValueError(f"Low confidence geocoding result: {confidence}")
+                logger.error("Low confidence geocoding result: %s. Response: %s", confidence, result_text)
+                return None
 
             return (float(latitude), float(longitude), full_name)
 
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse AI response as JSON: {e}")
+            raise ValueError(f"Failed to parse AI response as JSON: {e}\n{result_text}")
 
     def extract_and_geocode_places(
         self, content: str
@@ -93,7 +97,7 @@ class AIGeocodingService:
 
         prompt = self._build_place_extraction_prompt(content)
         response = self.model.generate_content(prompt)
-        result_text = getattr(response, "text", "").strip()
+        result_text = getattr(response, "text", "").strip().replace("```json", "").replace("```", "")
 
         if not result_text:
             raise ValueError("Empty response from Gemini API")
@@ -116,7 +120,11 @@ class AIGeocodingService:
                     continue
 
                 # Geocode this place
-                lat, lng, full_name = self.geocode_place(place_name, context)
+                result = self.geocode_place(place_name, context)
+                if result:
+                    lat, lng, full_name = result
+                else:
+                    continue
                 geocoded_places.append(
                     {
                         "place_name": place_name,
@@ -131,7 +139,7 @@ class AIGeocodingService:
             return geocoded_places
 
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse AI response as JSON: {e}")
+            raise ValueError(f"Failed to parse AI response as JSON: {e}\n{result_text}")
 
     def _build_geocoding_prompt(self, place_name: str, context: str = "") -> str:
         """Build the prompt for geocoding a specific place"""
@@ -142,7 +150,7 @@ You are a geocoding expert. I need you to find the exact latitude and longitude 
 
 Place name: "{place_name}"{context_info}
 
-Please provide the coordinates in JSON format with this exact structure:
+Please provide the coordinates in JSON format with this exact structure. Don't include any other text or comments.
 {{
     "latitude": <decimal latitude>,
     "longitude": <decimal longitude>,

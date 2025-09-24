@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion';
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Edit3, List, Map, MapPin, Navigation, Plus } from 'lucide-react';
+import { Edit3, List, Map, MapPin, Navigation, Plus, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
-import { useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import styled from 'styled-components';
-import { getEntries, getInsights } from '../services/api';
+import { geocodePlace, getEntries, getInsights, updateEntry } from '../services/api';
 
 const Container = styled.div`
   min-height: calc(100vh - 80px); /* Account for bottom navigation */
@@ -214,8 +214,162 @@ const LocationStatus = styled.div`
   }
 `;
 
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+`;
+
+const ModalContent = styled.div`
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  backdrop-filter: blur(10px);
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const ModalTitle = styled.h2`
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 20px;
+`;
+
+const Label = styled.label`
+  display: block;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  font-size: 1rem;
+  
+  &:focus {
+    outline: none;
+    border-color: rgba(138, 43, 226, 0.6);
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 30px;
+`;
+
+const Button = styled.button`
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &.primary {
+    background: rgba(138, 43, 226, 0.8);
+    color: #ffffff;
+    
+    &:hover {
+      background: rgba(138, 43, 226, 1);
+    }
+    
+    &:disabled {
+      background: rgba(138, 43, 226, 0.3);
+      cursor: not-allowed;
+    }
+  }
+  
+  &.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+  }
+`;
+
+const CoordinateInputs = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+`;
+
+const HelpText = styled.p`
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  margin-top: 8px;
+  margin-bottom: 0;
+`;
+
 const Places = () => {
   const [view, setView] = useState('split'); // 'map', 'list', 'split'
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState(null); // 'setLocation' or 'addPlace'
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [formData, setFormData] = useState({
+    locationName: '',
+    latitude: '',
+    longitude: ''
+  });
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [manualCoordinates, setManualCoordinates] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const { data: insights, isLoading: insightsLoading } = useQuery(
     'insights',
@@ -264,14 +418,102 @@ const Places = () => {
     });
   };
 
-  const handleSetLocation = (placeName) => {
-    // TODO: Implement location setting functionality
-    console.log('Setting location for:', placeName);
+  // Mutation for updating entry location
+  const updateEntryMutation = useMutation(
+    ({ id, data }) => updateEntry(id, data),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('entries');
+        queryClient.invalidateQueries('insights');
+        setModalOpen(false);
+        setFormData({ locationName: '', latitude: '', longitude: '' });
+      },
+      onError: (error) => {
+        console.error('Failed to update entry:', error);
+        alert('Failed to update entry. Please try again.');
+      }
+    }
+  );
+
+  const handleSetLocation = (entry) => {
+    setSelectedEntry(entry);
+    setModalType('setLocation');
+    setFormData({
+      locationName: entry.location_name || '',
+      latitude: entry.latitude?.toString() || '',
+      longitude: entry.longitude?.toString() || ''
+    });
+    setModalOpen(true);
   };
 
-  const handleEditPlace = (placeName) => {
-    // TODO: Implement place editing functionality
-    console.log('Editing place:', placeName);
+  const handleAddPlace = (entry) => {
+    setSelectedEntry(entry);
+    setModalType('addPlace');
+    setFormData({
+      locationName: '',
+      latitude: '',
+      longitude: ''
+    });
+    setModalOpen(true);
+  };
+
+  const handleEditPlace = (entry) => {
+    setSelectedEntry(entry);
+    setModalType('setLocation');
+    setFormData({
+      locationName: entry.location_name || '',
+      latitude: entry.latitude?.toString() || '',
+      longitude: entry.longitude?.toString() || ''
+    });
+    setModalOpen(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedEntry) return;
+    
+    // If coordinates are already provided, use them directly
+    if (formData.latitude && formData.longitude) {
+      const updateData = {
+        location_name: formData.locationName,
+        latitude: parseFloat(formData.latitude),
+        longitude: parseFloat(formData.longitude)
+      };
+      updateEntryMutation.mutate({ id: selectedEntry.id, data: updateData });
+      return;
+    }
+    
+    // Otherwise, geocode the place name
+    if (!formData.locationName) {
+      alert('Please enter a location name');
+      return;
+    }
+    
+    setIsGeocoding(true);
+    try {
+      const geocodeResult = await geocodePlace(formData.locationName);
+      const updateData = {
+        location_name: geocodeResult.full_name,
+        latitude: geocodeResult.latitude,
+        longitude: geocodeResult.longitude
+      };
+      updateEntryMutation.mutate({ id: selectedEntry.id, data: updateData });
+    } catch (error) {
+      console.error('Geocoding failed:', error);
+      alert('Could not find coordinates for this place. Please try a different name or enter coordinates manually.');
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setFormData({ locationName: '', latitude: '', longitude: '' });
+    setSelectedEntry(null);
+    setModalType(null);
+    setManualCoordinates(false);
+    setIsGeocoding(false);
   };
 
   return (
@@ -399,7 +641,7 @@ const Places = () => {
                         📍 {entry.latitude.toFixed(6)}, {entry.longitude.toFixed(6)}
                       </CoordinatesInfo>
                       <PlaceActions>
-                        <ActionButton onClick={() => handleEditPlace(entry.location_name)}>
+                        <ActionButton onClick={() => handleEditPlace(entry)}>
                           <Edit3 size={14} />
                           Edit Location
                         </ActionButton>
@@ -437,7 +679,7 @@ const Places = () => {
                           Entry: "{entry.title || 'Untitled Entry'}"
                         </PlaceDetails>
                         <PlaceActions>
-                          <ActionButton onClick={() => handleSetLocation(placeInsight?.category.name)}>
+                          <ActionButton onClick={() => handleSetLocation(entry)}>
                             <MapPin size={14} />
                             Set Location
                           </ActionButton>
@@ -467,7 +709,7 @@ const Places = () => {
                         {entry.content.substring(0, 100)}...
                       </PlaceDetails>
                       <PlaceActions>
-                        <ActionButton onClick={() => handleSetLocation(entry.title)}>
+                        <ActionButton onClick={() => handleAddPlace(entry)}>
                           <Plus size={14} />
                           Add Place
                         </ActionButton>
@@ -488,6 +730,101 @@ const Places = () => {
           </Section>
         )}
       </ContentArea>
+
+      {/* Modal for setting location or adding place */}
+      {modalOpen && (
+        <Modal onClick={handleCloseModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>
+                {modalType === 'setLocation' ? 'Set Location' : 'Add Place'}
+              </ModalTitle>
+              <CloseButton onClick={handleCloseModal}>
+                <X size={20} />
+              </CloseButton>
+            </ModalHeader>
+
+            <form onSubmit={handleSubmit}>
+              <FormGroup>
+                <Label htmlFor="locationName">Location Name</Label>
+                <Input
+                  id="locationName"
+                  type="text"
+                  value={formData.locationName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, locationName: e.target.value }))}
+                  placeholder="e.g., Central Park, New York"
+                  required
+                />
+                <HelpText>
+                  Enter the name of the place or location
+                </HelpText>
+              </FormGroup>
+
+              <FormGroup>
+                <Label>
+                  <input
+                    type="checkbox"
+                    checked={manualCoordinates}
+                    onChange={(e) => setManualCoordinates(e.target.checked)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  Enter coordinates manually (optional)
+                </Label>
+                {manualCoordinates && (
+                  <CoordinateInputs>
+                    <div>
+                      <Label htmlFor="latitude">Latitude</Label>
+                      <Input
+                        id="latitude"
+                        type="number"
+                        step="any"
+                        value={formData.latitude}
+                        onChange={(e) => setFormData(prev => ({ ...prev, latitude: e.target.value }))}
+                        placeholder="40.7589"
+                        min="-90"
+                        max="90"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="longitude">Longitude</Label>
+                      <Input
+                        id="longitude"
+                        type="number"
+                        step="any"
+                        value={formData.longitude}
+                        onChange={(e) => setFormData(prev => ({ ...prev, longitude: e.target.value }))}
+                        placeholder="-73.9851"
+                        min="-180"
+                        max="180"
+                      />
+                    </div>
+                  </CoordinateInputs>
+                )}
+                <HelpText>
+                  {manualCoordinates 
+                    ? "You can find coordinates using Google Maps or other mapping services"
+                    : "Coordinates will be automatically found using the place name"
+                  }
+                </HelpText>
+              </FormGroup>
+
+              <ButtonGroup>
+                <Button type="button" className="secondary" onClick={handleCloseModal}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="primary"
+                  disabled={updateEntryMutation.isLoading || isGeocoding || !formData.locationName}
+                >
+                  {isGeocoding ? 'Finding Location...' : 
+                   updateEntryMutation.isLoading ? 'Saving...' : 'Save Location'}
+                </Button>
+              </ButtonGroup>
+            </form>
+          </ModalContent>
+        </Modal>
+      )}
     </Container>
   );
 };

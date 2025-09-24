@@ -31,6 +31,14 @@ def detect_content_type(file: UploadedFile) -> str:
     return guessed or "application/octet-stream"
 
 
+def clean_text(text: str) -> str:
+    """Clean text by removing null bytes and other problematic characters."""
+    if not text:
+        return ""
+    # Remove null bytes and other control characters that can cause database issues
+    return text.replace('\x00', '').replace('\x01', '').replace('\x02', '').replace('\x03', '').replace('\x04', '').replace('\x05', '').replace('\x06', '').replace('\x07', '').replace('\x08', '').replace('\x0b', '').replace('\x0c', '').replace('\x0e', '').replace('\x0f', '').replace('\x10', '').replace('\x11', '').replace('\x12', '').replace('\x13', '').replace('\x14', '').replace('\x15', '').replace('\x16', '').replace('\x17', '').replace('\x18', '').replace('\x19', '').replace('\x1a', '').replace('\x1b', '').replace('\x1c', '').replace('\x1d', '').replace('\x1e', '').replace('\x1f', '').strip()
+
+
 def extract_text_from_file(file: UploadedFile) -> str:
     """Extract text from uploaded file. Supports images (OCR), PDFs, and text files.
 
@@ -54,7 +62,7 @@ def extract_text_from_file(file: UploadedFile) -> str:
         # Handle simple text types
         if content_type.startswith("text/") or filename.lower().endswith((".txt", ".md", ".csv", ".log")):
             try:
-                return file_bytes.decode("utf-8", errors="ignore")
+                return clean_text(file_bytes.decode("utf-8", errors="ignore"))
             except Exception:
                 return ""
 
@@ -63,7 +71,7 @@ def extract_text_from_file(file: UploadedFile) -> str:
             if pdf_extract_text is None:
                 return ""
             try:
-                return pdf_extract_text(io.BytesIO(file_bytes)) or ""
+                return clean_text(pdf_extract_text(io.BytesIO(file_bytes)) or "")
             except Exception:
                 return ""
 
@@ -74,13 +82,13 @@ def extract_text_from_file(file: UploadedFile) -> str:
             try:
                 image = Image.open(io.BytesIO(file_bytes))
                 text = pytesseract.image_to_string(image)
-                return text or ""
+                return clean_text(text or "")
             except Exception:
                 return ""
 
         # Fallback: try to decode as text
         try:
-            return file_bytes.decode("utf-8", errors="ignore")
+            return clean_text(file_bytes.decode("utf-8", errors="ignore"))
         except Exception:
             return ""
     except Exception:
