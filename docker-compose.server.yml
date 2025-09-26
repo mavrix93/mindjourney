@@ -1,0 +1,117 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mindjourney}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - /srv/mindjourney/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ${DOCKERHUB_USERNAME}/mindjourney-backend:latest
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: ${SECRET_KEY}
+      DB_NAME: ${DB_NAME:-mindjourney}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_HOST: db
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379/0
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    ports:
+      - "8000:8000"
+
+  celery:
+    image: ${DOCKERHUB_USERNAME}/mindjourney-backend:latest
+    command: celery -A mindjourney worker --loglevel=info
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: ${SECRET_KEY}
+      DB_NAME: ${DB_NAME:-mindjourney}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_HOST: db
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379/0
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    volumes:
+      - media_volume:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+
+  celery-beat:
+    image: ${DOCKERHUB_USERNAME}/mindjourney-backend:latest
+    command: celery -A mindjourney beat --loglevel=info
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: ${SECRET_KEY}
+      DB_NAME: ${DB_NAME:-mindjourney}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_HOST: db
+      DB_PORT: 5432
+      REDIS_URL: redis://redis:6379/0
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/mindjourney-frontend:latest
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --label-enable --cleanup --interval 300
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  static_volume:
+  media_volume:
+
