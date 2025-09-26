@@ -27,16 +27,13 @@ services:
 
   backend:
     image: ${DOCKERHUB_USERNAME}/mindjourney-backend:latest
+    env_file:
+      - .env
     environment:
       DEBUG: "False"
-      SECRET_KEY: ${SECRET_KEY}
-      DB_NAME: ${DB_NAME:-mindjourney}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_HOST: db
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379/0
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
@@ -53,16 +50,13 @@ services:
   celery:
     image: ${DOCKERHUB_USERNAME}/mindjourney-backend:latest
     command: celery -A mindjourney worker --loglevel=info
+    env_file:
+      - .env
     environment:
       DEBUG: "False"
-      SECRET_KEY: ${SECRET_KEY}
-      DB_NAME: ${DB_NAME:-mindjourney}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_HOST: db
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379/0
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
     volumes:
       - media_volume:/app/media
     depends_on:
@@ -76,16 +70,13 @@ services:
   celery-beat:
     image: ${DOCKERHUB_USERNAME}/mindjourney-backend:latest
     command: celery -A mindjourney beat --loglevel=info
+    env_file:
+      - .env
     environment:
       DEBUG: "False"
-      SECRET_KEY: ${SECRET_KEY}
-      DB_NAME: ${DB_NAME:-mindjourney}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_HOST: db
       DB_PORT: 5432
       REDIS_URL: redis://redis:6379/0
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
     depends_on:
       db:
         condition: service_healthy
