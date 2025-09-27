@@ -13,12 +13,14 @@ RUN apt-get update \
         postgresql-client \
         build-essential \
         libpq-dev \
+        libffi-dev \
         tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
 # Copy project
 COPY . /app/
