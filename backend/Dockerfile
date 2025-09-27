@@ -14,13 +14,22 @@ RUN apt-get update \
         build-essential \
         libpq-dev \
         libffi-dev \
+        zlib1g-dev \
+        libjpeg-dev \
+        libpng-dev \
+        libfreetype6-dev \
+        liblcms2-dev \
+        libwebp-dev \
+        libharfbuzz-dev \
+        libfribidi-dev \
+        libxcb1-dev \
         tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt /app/
 RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir --prefer-binary -r requirements.txt
 
 # Copy project
 COPY . /app/
