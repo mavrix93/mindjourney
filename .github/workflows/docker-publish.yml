@@ -2,11 +2,11 @@ name: Build and Publish Docker Images
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["master"]
     paths:
-      - 'backend/**'
-      - 'frontend/**'
-      - '.github/workflows/docker-publish.yml'
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/docker-publish.yml"
   workflow_dispatch:
 
 env:
